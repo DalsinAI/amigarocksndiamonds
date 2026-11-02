@@ -1,6 +1,6 @@
 # Amiga port intake: Rocks'n'Diamonds
 
-- Port Atlas: [g-rocks-n-diamonds](https://www.amigachrome.com/ports/#g-rocks-n-diamonds)
+- Port Atlas: [g-rocks-n-diamonds](https://www.amicradle.com/ports/#g-rocks-n-diamonds)
 - Priority: `P1`
 - Atlas decision: `evaluate`
 - Upstream source: `https://github.com/ArtsoftEntertainment/rocksndiamonds`
