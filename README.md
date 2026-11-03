@@ -140,7 +140,13 @@ port's `net_none.c`, with patches 0001 and 0002. The compiler's warnings are
 upstream's own (three: two `isspace` on a `char`, one variable the compiler
 cannot see set), none in the patches. zlib came from the stove's locked
 `port-deps`. The data (commit `eadcf6e`, job `j20261103T084048-ea0612`): 637
-files, 1,768,711 bytes, in a 2,304,000-byte archive.
+files, 1,768,711 bytes, in a 2,304,000-byte archive (`402ca165...8358`).
+The build of this README's commit (`a882322`, job
+`j20261103T084602-4a24e8`): SHA-256
+`c95700ccfd6ce17ae9f171b90a95a22df4778b845792145de9841dfccebc257d`
+(3,034,200 bytes; `receipts/1-build-open5-stove_build.json`). Each commit
+builds its own bytes: the build date and commit are compiled in, as
+upstream's Makefile does.
 
 In `lab:rnd`, a copy of Instance-32 (AC090 JIT, 68040 + FPU, RTG
 1920x1080, AHI, muted), with gfopenrtg's SDL2.module and SDL2_mixer.module
