@@ -6,9 +6,9 @@
 # runtime-data (STOVE= and OUT= set; the stove compiles only untar.c, the
 # unpacker from amigakobodeluxe).
 # What is packed is gameports/catalog.json's runtimeData: its "dirs", less
-# its "excluded". The data carries no licence of its own (README, Data and
-# licences): the classic level sets and the three music modules are never
-# packed, and the rest is for lab runs until Dale decides on it.
+# its "excluded": upstream's own data, under the GPL-2.0 terms Arch's and
+# upstream's packages give it (README, Data and licences). The classic level
+# sets and the three music modules are never packed.
 #   STOVE  the stove (default ~/AmiCradle/stoves/os32-gcc16, then
 #          ~/AmigaChrome/stoves/os32-gcc16)
 #   OUT    the output directory (default build-amiga beside this script)
@@ -85,7 +85,7 @@ receipt = {
     "untar_sha256": sha(out / "untar"),
     "dirs": port["runtimeData"]["dirs"],
     "excluded": port["runtimeData"]["excluded"],
-    "rights": "No licence of its own: for lab runs until Dale decides (README, Data and licences)",
+    "rights": "Upstream's own data, GPL-2.0 as Arch's and upstream's packages give it; Debian treats it as unclear (README, Data and licences)",
 }
 (out / "data-receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
 print(json.dumps(receipt, indent=2))

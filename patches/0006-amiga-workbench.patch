@@ -1,0 +1,40 @@
+--- a/src/main.c
++++ b/src/main.c
+@@ -9711,8 +9711,37 @@
+ 		  GAME_VERSION_ACTUAL);
+ }
+ 
++#if defined(PLATFORM_AMIGA)
++// SDL's own log lines, to the program's stderr (NIL: from Workbench)
++static void SDLCALL AmigaLogToStderr(void *userdata, int category,
++				     SDL_LogPriority priority,
++				     const char *message)
++{
++  fprintf(stderr, "%s\n", message);
++}
++#endif
++
+ int main(int argc, char *argv[])
+ {
++#if defined(PLATFORM_AMIGA)
++  /* AmigaOS, started from its Workbench icon: libnix gives argc 0 and the
++     WBStartup message in argv, so no program name and no options; the game
++     then starts as with no options from a Shell (its data and
++     PROGDIR:userdata beside the program). Its output and SDL's go to NIL:,
++     so no console window opens beside the game for them (the game's own
++     log is still written to PROGDIR:userdata). */
++  static char *wb_argv[] = { "rocksndiamonds", NULL };
++
++  if (argc < 1)
++  {
++    argc = 1;
++    argv = wb_argv;
++    freopen("NIL:", "w", stdout);
++    freopen("NIL:", "w", stderr);
++    SDL_LogSetOutputFunction(AmigaLogToStderr, NULL);
++  }
++#endif
++
+   InitProgramLogs();
+   InitProgramConfig(argv[0]);
+ 

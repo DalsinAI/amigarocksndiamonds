@@ -11,9 +11,9 @@
         "submodules": false,
         "imported": "Upstream tree imported into this repository at 83f44f2 (file for file the same as the upstream commit, which was also upstream's head on 3 November 2026); build-amiga.sh builds it as imported, with patches/ applied to a copy"
       },
-      "contentPolicy": "Engine GPL-2.0 (Artsoft Entertainment, Holger Schemel; COPYING). The game data in the tree carries no licence of its own (README, Data and licences): the classic level sets recreate commercial games' levels and the three music modules are third-party demoscene tracks, so neither is ever packed; upstream's own graphics, sounds, rhythm loop, tutorials and documents are packed for lab runs only until Dale decides on them.",
+      "contentPolicy": "Engine GPL-2.0 (Artsoft Entertainment, Holger Schemel; COPYING). Upstream's own data (graphics, sounds, the rhythm loop, the tutorials, the help texts) ships under the GPL-2.0 terms Arch's and upstream's own packages give it (Dale's decision, 3 November 2026); Debian treats its licence as unclear and leaves it out. The classic level sets (recreations of commercial games' levels) and the three demoscene music modules are never packed.",
       "runtimeData": {
-        "mode": "lab-only",
+        "mode": "bundled",
         "dirs": [
           "graphics/gfx_classic",
           "sounds/snd_classic",

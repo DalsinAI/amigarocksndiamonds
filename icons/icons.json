@@ -1,0 +1,22 @@
+{
+  "about": "The Workbench icons of the RocksnDiamonds drawer: python3 AMICRADLE/scripts/port_icons.py icons/icons.json --out icons (DalsinAI/amicradle). The art is Rocks'n'Diamonds' own program icon (upstream graphics/gfx_classic/icons/icon.png at the pinned commit). The Installer's icon, which goes beside the drawer, is icons/installer.json's.",
+  "drawer": {
+    "name": "RocksnDiamonds"
+  },
+  "badge": "art/rnd.png",
+  "icons": [
+    {
+      "file": "rocksndiamonds.info",
+      "kind": "tool",
+      "stack": 262144
+    },
+    {
+      "file": "ReadMe.info",
+      "kind": "readme"
+    },
+    {
+      "file": "COPYING.info",
+      "kind": "readme"
+    }
+  ]
+}

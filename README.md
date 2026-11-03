@@ -12,8 +12,9 @@ file for file apart from `AMIGA_PORT.md`, the repo guard workflow and this
 SDL2_image and SDL2_mixer through GFOpenGPU, GFOpenAmigaGCC 16.2.0-open5.
 Upstream's own documents are `INSTALL`, `CREDITS`, `ChangeLog` and `docs/`.
 
-The game data in the tree has no licence of its own. Until Dale decides on
-it, nothing from it is for publication (see Data and licences).
+The game's own data ships in the package under the GPL-2.0 terms upstream's
+and Arch's packages give it; the classic games' level sets and three music
+modules from the tree do not (see Data and licences).
 
 ## Feasibility
 
@@ -32,6 +33,7 @@ patches, applied to a copy:
 | `0003-amiga-presentation.patch` | Images with alpha on a big-endian machine (upstream keeps an RGBA image's alpha mask, which falls on the back buffer's blue byte on a 68k, and SDL knows no such format: the game stopped at its first image); on AmigaOS full screen is a screen of the game's own in the display mode closest to its 672x560 frame, the frame drawn 1:1 in the middle, and it is the default; with `SetEnv RND_FPS 1` each second's frame rate goes to the program's output |
 | `0004-amiga-input.patch` | On AmigaOS each start logs the joysticks and game controllers SDL finds; with `SetEnv RND_INPUT 1` every key, joystick and controller event the game takes goes to the program's output with its time. Upstream's input itself is unchanged |
 | `0005-amiga-sound.patch` | Upstream's sound code and SDL_mixer unchanged. On AmigaOS 1024 samples a buffer by default (upstream 512; Windows already takes 1024), the audio driver and format logged at start, and with `SetEnv RND_FPS 1` the buffers mixed and those more than half a buffer late every five seconds |
+| `0006-amiga-workbench.patch` | Started from its icon, libnix gives the program no name and no options (argc 0); it now starts as from a Shell with no options, its output and SDL's to NIL: so no console window opens beside the game |
 
 What could stop it: the game draws every frame by the CPU into a 672x560
 32-bit surface and has SDL copy that to the screen, about 1.5 MB a frame.
@@ -72,22 +74,52 @@ amigakobodeluxe; OS 3.2 has no archiver). What goes in it is
 excluded files, which the script checks again. `SHA256SUMS` lists every
 data file.
 
-## Installing (lab)
+## Package
 
-Make a drawer, for example `Work:Games/RocksnDiamonds`, put in it
-`rocksndiamonds` and `COPYING` (from the program's build) and `untar` (from
-`runtime-data`), then in a Shell:
+`package/build-amiga.sh` (Cradle's `stove_build`, target `package`) builds
+the game and its data, then `tools/make_package.py` (from amigacdogs, with
+`tools/lha_archive.py`, AmiCradle's LhA writer; "beside" added for the
+files next to the drawer) writes:
 
-```
-CD Work:Games/RocksnDiamonds
-untar rnd-data.tar Work:Games/RocksnDiamonds
-```
+- `rocksndiamonds-VERSION-68040.lha`: level-1 headers, `-lh5-`, as Amiga
+  LhA writes them, holding the `RocksnDiamonds` drawer and its icon, and
+  beside them `Install-RocksnDiamonds` with its icon; its `.sha256` and an
+  Aminet-style `.readme`;
+- `RocksnDiamonds.tar`, the same for a lab, and `package.json` with every
+  member's size and SHA-256.
 
-The program reads `graphics/`, `sounds/`, `music/`, `levels/`, `docs/` and
-`conf/` beside itself (`PROGDIR:`) and writes only in `PROGDIR:userdata`
-(made on first start). It needs GFOpenGPU with its `SDL2.module`,
-`SDL2_image.module` and `SDL2_mixer.module` (in `LIBS:GFOpenGPU/`, and in
-`LIBS:OpenGPU/` for older systems), and a 68040 or 68060 with its FPU.
+The drawer holds `rocksndiamonds` with its tool icon (256 KB stack),
+`ReadMe` (`package/ReadMe.in`, filled from the receipt) and `COPYING` with
+their icons, and the game data. The GlowIcons are made by AmiCradle's
+`scripts/port_icons.py` from Rocks'n'Diamonds' own program icon, the
+emerald (`icons/icons.json`; the Installer's, the emerald with a down
+arrow, from `icons/installer.json`). `package/VERSION` names the archive.
+
+`Install-RocksnDiamonds` is a native Amiga Installer script (modelled on
+amiganeverball's `Install-Neverball`; its icon runs
+`SYS:System/Installer`). It:
+
+- stops unless the Installer is 43.3 or newer and the processor is a 68040
+  or 68060 with its FPU;
+- stops with a clear message when SDL2.module, SDL2_image.module or
+  SDL2_mixer.module is in neither `LIBS:GFOpenGPU/` nor `LIBS:OpenGPU/`;
+- asks for the drawer to install into (Work:Games by default), refuses the
+  drawer it is copying from, and needs 8 MB free;
+- copies the drawer's contents, and its icon if there is none there yet.
+  The package has no `userdata`, so the player's players, settings, saved
+  games and own levels are never written over; on an update it says so;
+- copies to `LIBS:GFOpenGPU/` any of the three modules only
+  `LIBS:OpenGPU/` has.
+
+## Installing
+
+Unpack the archive with OpenCompress (AmigaOS 3.2 has no `lha`) somewhere
+other than where the game will go, for example `OpenCompress x
+rocksndiamonds-VERSION-68040.lha RAM:`, open RAM: and double-click
+`Install-RocksnDiamonds`. The program reads its data beside itself
+(`PROGDIR:`) and writes only in `PROGDIR:userdata` (made on first start). It
+needs GFOpenGPU with its `SDL2.module`, `SDL2_image.module` and
+`SDL2_mixer.module`, AHI for sound, and a 68040 or 68060 with its FPU.
 
 ## Running
 
@@ -125,36 +157,35 @@ amicradle `docs/porting/MEASUREMENT.md`).
 | Joystick / pad | not tested: SDL finds and opens port 2 as a game controller; no stick in the lab |
 | Sound | AHI opened and fed at 22,050 Hz, 1024-sample buffers, 4 late buffers in 6,054; not heard (muted lab); no whole-lab stop in any run |
 | Players, settings and saved games (tapes) across a cold restart | done (`PROGDIR:userdata`) |
-| Drawer with GlowIcons, LhA package, installed on a fresh lab from the LhA alone | not yet |
+| Drawer with GlowIcons, Installer, LhA package, installed on a fresh lab from the LhA alone | not yet |
 | Network play, the score server | not built (no network code) |
 
 ## Data and licences
 
 The engine is GPL-2.0 (`COPYING`, Artsoft Entertainment and Holger
 Schemel; `src/libgame/hash.*` and `src/libgame/random.c` carry their own
-permissive notices). The data beside it, as imported, carries **no licence
-of its own**: no file in `graphics/`, `sounds/`, `music/` or `levels/` names
-one, upstream's repository has no licence file for them, and the game's own
-info screen calls the game "Freeware". Distributions read that differently:
-Debian removes `graphics`, `levels`, `music` and `sounds` from its source
-package because their licence is unclear (and so ships the game in
-`contrib`, fetching the data at install time); Arch packages the same data
-as GPL-2.0-only. This port takes the careful reading, part by part:
+permissive notices). The data beside it, as imported, has no licence file
+of its own (the game's own info screen calls the game "Freeware").
+Distributions read it differently: Arch packages upstream's data as
+GPL-2.0-only, as upstream's own packages ship it with the GPL engine;
+Debian treats its licence as unclear, removes `graphics`, `levels`,
+`music` and `sounds` from its source package and fetches them at install
+time. **Dale decided on 3 November 2026 that the port ships upstream's own
+data under those GPL-2.0 terms**, with Debian's view noted here. Part by
+part:
 
 | Data | Whose | Packed |
 |---|---|---|
+| `graphics/gfx_classic/` | Holger Schemel, with toons by Thomas Andrae (Mirror Magic) and Karl Hörnell (Iceblox) and improvements by The Onyx Guy (`CREDITS`) | Yes, GPL-2.0 as above |
+| `sounds/snd_classic/`, `music/mus_classic/rhythmloop.wav` | Holger Schemel, with sounds and the rhythm loop by Majid Katzer (Mirror Magic) | Yes, GPL-2.0 as above |
+| `levels/Tutorials/` | Niko Böhm, Aaron Davidson and ncrecc (whose README says the set's own music was taken out to keep it "copyright friendly") | Yes, GPL-2.0 as above |
+| `docs/`, `conf/gamecontrollerdb.txt` | Upstream's help texts; SDL's community controller list (zlib) | Yes |
 | `levels/Classic_Games/` (Boulder Dash, Emerald Mine, Supaplex, Sokoban) | Recreations of the levels of the commercial originals (First Star Software, Kingsoft, Digital Integration, Thinking Rabbit) | **Never** |
 | `music/mus_classic/mod.apoplexy`, `mod.chiptune`, `mod.cream_of_the_earth` | Demoscene modules by Bee Hunter/Jazz (1994), 4-Mat/Anarchy (1991) and Romeo Knight/Red Sector (1993), credited in `CREDITS`, with no licence | **Never** |
-| `graphics/gfx_classic/` | Holger Schemel, with toons by Thomas Andrae (Mirror Magic) and Karl Hörnell (Iceblox) and improvements by The Onyx Guy (`CREDITS`) | Lab runs only |
-| `sounds/snd_classic/`, `music/mus_classic/rhythmloop.wav` | Holger Schemel, with sounds and the rhythm loop by Majid Katzer (Mirror Magic) | Lab runs only |
-| `levels/Tutorials/` | Niko Böhm, Aaron Davidson and ncrecc (whose README says the set's own music was taken out to keep it "copyright friendly") | Lab runs only |
-| `docs/`, `conf/gamecontrollerdb.txt` | Upstream's help texts; SDL's community controller list (zlib) | Lab runs only |
 
-Without its graphics the game cannot start, so the port is built and tested
-with the "lab runs only" data, and nothing is published until Dale decides
-whether upstream's own data may ship (and under which licence it is named),
-or whether it must wait for upstream to state one. The classic games' levels
-and the three modules stay out whatever is decided.
+`gameports/catalog.json` lists what is packed and what is left out;
+`runtime-data/build-amiga.sh` packs from it and stops if a classic level
+set or a module is ever listed.
 
 ## Observed
 

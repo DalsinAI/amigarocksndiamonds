@@ -1,0 +1,27 @@
+{
+  "drawer": "RocksnDiamonds",
+  "drawer_icon": "icons/RocksnDiamonds.info",
+  "archive": "rocksndiamonds-{version}-68040",
+  "members": [
+    {"name": "rocksndiamonds", "build": "RocksnDiamonds/rocksndiamonds", "check": "executable_sha256"},
+    {"name": "rocksndiamonds.info", "repo": "icons/rocksndiamonds.info"},
+    {"name": "ReadMe", "readme": "package/ReadMe.in"},
+    {"name": "ReadMe.info", "repo": "icons/ReadMe.info"},
+    {"name": "COPYING", "build": "RocksnDiamonds/COPYING"},
+    {"name": "COPYING.info", "repo": "icons/COPYING.info"},
+    {"name": "", "tar": "data/rnd-data.tar"}
+  ],
+  "beside": [
+    {"name": "Install-RocksnDiamonds", "repo": "package/Install-RocksnDiamonds"},
+    {"name": "Install-RocksnDiamonds.info", "repo": "icons/Install-RocksnDiamonds.info"}
+  ],
+  "aminet": [
+    ["Short", "Boulder Dash style puzzle game, 68040+FPU"],
+    ["Author", "Rocks'n'Diamonds: Holger Schemel (Artsoft Entertainment); port: AmiCradle Team"],
+    ["Uploader", "AmiCradle Team"],
+    ["Type", "game/think"],
+    ["Version", "{version}"],
+    ["Requires", "AmigaOS 3.2, 68040/68060 with FPU, GFOpenGPU SDL2, SDL2_image and SDL2_mixer, AHI"],
+    ["Architecture", "m68k-amigaos >= 3.2"]
+  ]
+}

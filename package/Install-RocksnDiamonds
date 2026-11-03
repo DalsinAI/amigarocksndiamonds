@@ -1,0 +1,142 @@
+; $VER: Install-RocksnDiamonds 4.4.2.4 (3.11.2026)
+; Native Amiga Installer script for Rocks'n'Diamonds, AmigaOS 3.x, 68040 + FPU.
+; Modelled on DalsinAI/amiganeverball's Install-Neverball. MIT, Copyright (c)
+; 2026 AmiCradle Team.
+;
+; It checks the Installer and the CPU, asks for the drawer to install into,
+; copies the RocksnDiamonds drawer there without touching the player's own
+; files (PROGDIR:userdata: players, settings, saved games, scores, the
+; player's own levels; the package has none of its own), and makes sure
+; LIBS:GFOpenGPU/ has the SDL modules the game needs, copying them from
+; LIBS:OpenGPU/ when only that older drawer has them.
+
+(set @app-name "Rocks'n'Diamonds")
+(set @default-dest "Work:Games")
+
+(onerror
+    (message (cat "Rocks'n'Diamonds was not installed completely.\n\n"
+                  @error-msg
+                  "\n\nFiles already copied may remain in the destination. "
+                  "Your players, settings and saved games were not touched.")))
+
+; Installer 43.3 or newer (the one in AmigaOS 3.1.4 and 3.2)
+(if (< @installer-version 2818051)
+    (abort "This installation needs Installer 43.3 or newer."))
+
+; a 68040 or 68060 with its FPU: the game is built for the 68040 and 68881
+(set #cpu (database "cpu"))
+(set #fpu (database "fpu"))
+(if (and (<> #cpu "68040") (<> #cpu "68060"))
+    (abort (cat "Rocks'n'Diamonds for AmigaOS 3.x needs a 68040 or 68060 "
+                "with an FPU; this Amiga has a " #cpu ".")))
+(if (or (= #fpu "NOFPU") (= #fpu ""))
+    (abort (cat "Rocks'n'Diamonds needs the FPU of a full 68040 or 68060; "
+                "this " #cpu " has none (an LC or EC processor).")))
+
+; the package as unpacked: the drawer beside this script
+(set #source-root (pathonly (expandpath @icon)))
+(set #source (tackon #source-root "RocksnDiamonds"))
+(if (<> (exists #source) 2)
+    (abort (cat "The RocksnDiamonds drawer is not beside Install-RocksnDiamonds.\n\n"
+                "Unpack the whole archive first, for example to RAM:, and run "
+                "Install-RocksnDiamonds from there.")))
+(if (<> (exists (tackon #source "rocksndiamonds")) 1)
+    (abort "The program rocksndiamonds is missing from the RocksnDiamonds drawer."))
+(if (<> (exists (tackon #source "graphics")) 2)
+    (abort "The game's graphics drawer is missing from the RocksnDiamonds drawer."))
+
+; the SDL modules: in LIBS:GFOpenGPU/, or in LIBS:OpenGPU/ to copy from
+(set #modules-missing "")
+(set #n 0)
+(while (< #n 3)
+    (
+        (set #module (select #n "SDL2.module" "SDL2_image.module" "SDL2_mixer.module"))
+        (if (and (<> (exists (tackon "LIBS:GFOpenGPU" #module) (noreq)) 1)
+                 (<> (exists (tackon "LIBS:OpenGPU" #module) (noreq)) 1))
+            (set #modules-missing (cat #modules-missing " " #module)))
+        (set #n (+ #n 1))))
+(if (<> #modules-missing "")
+    (abort (cat "Rocks'n'Diamonds needs GFOpenGPU's SDL modules, and these are "
+                "in neither LIBS:GFOpenGPU/ nor LIBS:OpenGPU/:\n\n"
+                #modules-missing
+                "\n\nInstall GFOpenGPU (with SDL2, SDL2_image and SDL2_mixer) "
+                "first, then run this Installer again.")))
+
+(welcome
+    "Install Rocks'n'Diamonds 4.4.2.4 for AmigaOS 3.x, 68040 or 68060 with an FPU.")
+
+(set #base
+    (askdir
+        (prompt "Choose the drawer to put the RocksnDiamonds drawer in.")
+        (help (cat "The Installer makes a RocksnDiamonds drawer here, or updates "
+                   "the one already there. Your players, settings, saved games "
+                   "and own levels (the drawer userdata inside it) are kept as "
+                   "they are."))
+        (default (if (exists "Work:Games" (noreq))
+                     "Work:Games"
+                     (if (exists "Work:" (noreq)) "Work:" "SYS:")))))
+(set #dest (tackon #base "RocksnDiamonds"))
+
+(if (= (expandpath #dest) (expandpath #source))
+    (abort (cat "This is the drawer the Installer copies from. Unpack the "
+                "archive somewhere else, for example RAM:, and install from there.")))
+
+(if (< (getdiskspace #base) 8000000)
+    (abort "The chosen disk needs at least 8 MB free."))
+
+(set #update (= (exists #dest) 2))
+(if (and #update (= (exists (tackon #dest "userdata")) 2))
+    (message (cat "Rocks'n'Diamonds is already installed in " #dest
+                  ".\n\nThe program and the game's data will be replaced. "
+                  "Your players, settings and saved games in its userdata "
+                  "drawer are kept.")))
+
+(if (<> (exists #dest) 2)
+    (makedir #dest))
+; the drawer's own icon beside it, only if there is none (the player may have
+; moved it); then the drawer's contents: the package holds no userdata, so the
+; player's own files are never written over
+(if (<> (exists (tackon #base "RocksnDiamonds.info")) 1)
+    (copyfiles
+        (prompt "Copying the drawer's icon")
+        (help @copyfiles-help)
+        (source (tackon #source-root "RocksnDiamonds.info"))
+        (dest #base)))
+(copyfiles
+    (prompt "Copying Rocks'n'Diamonds")
+    (help @copyfiles-help)
+    (source #source)
+    (dest #dest)
+    (all)
+    (optional "force" "fail"))
+(protect (tackon #dest "rocksndiamonds") "+rwed")
+
+; LIBS:GFOpenGPU/: copy from LIBS:OpenGPU/ any module only that drawer has
+(set #n 0)
+(set #copied "")
+(while (< #n 3)
+    (
+        (set #module (select #n "SDL2.module" "SDL2_image.module" "SDL2_mixer.module"))
+        (if (<> (exists (tackon "LIBS:GFOpenGPU" #module) (noreq)) 1)
+            (
+                (if (<> (exists "LIBS:GFOpenGPU" (noreq)) 2)
+                    (makedir "LIBS:GFOpenGPU"))
+                (copyfiles
+                    (prompt (cat "Copying " #module " to LIBS:GFOpenGPU/"))
+                    (help @copyfiles-help)
+                    (source (tackon "LIBS:OpenGPU" #module))
+                    (dest "LIBS:GFOpenGPU"))
+                (set #copied (cat #copied " " #module))))
+        (set #n (+ #n 1))))
+
+(set @default-dest #dest)
+(complete 100)
+(if @pretend
+    (message "Simulation completed. No files were installed.")
+    (message (cat "Rocks'n'Diamonds is installed in " #dest ".\n\n"
+                  (if (<> #copied "")
+                      (cat "Copied from LIBS:OpenGPU/ to LIBS:GFOpenGPU/:" #copied "\n\n")
+                      "")
+                  "Open the drawer and start the game from its icon. "
+                  "It needs AHI for sound.")))
+(exit (quiet))

@@ -1,0 +1,21 @@
+{
+  "about": "The Installer's icon, beside the RocksnDiamonds drawer: python3 AMICRADLE/scripts/port_icons.py icons/installer.json --out OUT, then keep only OUT/Install-RocksnDiamonds.info (port_icons always draws a drawer icon too; this spec's is not used). art/install.png is the program icon's emerald with a down arrow.",
+  "drawer": {
+    "name": "Unused",
+    "file": "Unused-drawer.info"
+  },
+  "badge": "art/rnd.png",
+  "icons": [
+    {
+      "file": "Install-RocksnDiamonds.info",
+      "kind": "picture",
+      "art": "art/install.png",
+      "type": "project",
+      "defaultTool": "SYS:System/Installer",
+      "toolTypes": [
+        "APPNAME=Rocks'n'Diamonds",
+        "MINUSER=AVERAGE"
+      ]
+    }
+  ]
+}

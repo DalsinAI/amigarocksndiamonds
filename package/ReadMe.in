@@ -1,0 +1,76 @@
+Rocks'n'Diamonds @VERSION@ for AmigaOS 3.x (AmiCradle)
+==============================================================
+
+Rocks'n'Diamonds is Holger Schemel's arcade puzzle game in the line of
+Boulder Dash, Emerald Mine, Supaplex and Sokoban: dig through the earth,
+collect the gems, mind the falling rocks and the creatures, and reach the
+exit. It has a level editor and a tape recorder that saves and replays
+games. This is its AmigaOS 3.x build for a 68040 or 68060 with an FPU, with
+SDL 2, SDL2_image and SDL2_mixer through GFOpenGPU. Status: TESTING.
+
+Requirements
+------------
+
+- AmigaOS 3.2, a 68040 or 68060 with an FPU, AmiCradle or an RTG board
+  with an 800x600 (or larger) screen mode.
+- GFOpenGPU with SDL2.module, SDL2_image.module and SDL2_mixer.module, in
+  LIBS:GFOpenGPU/ or in the older LIBS:OpenGPU/ (the Installer copies them
+  across).
+- AHI for sound. GFOpenInput for pads (lowlevel.library alone gives the
+  joystick port).
+- About 6 MB on disk.
+
+Installing
+----------
+
+1. Unpack the archive somewhere other than where the game will go, for
+   example to RAM:, with OpenCompress (AmigaOS 3.2 has no lha command):
+     OpenCompress x rocksndiamonds-@VERSION@-68040.lha RAM:
+2. Open RAM: and double-click Install-RocksnDiamonds.
+3. Choose where the RocksnDiamonds drawer goes (Work:Games by default).
+
+The Installer checks the Installer version and the processor, copies the
+drawer and its icon, and copies any SDL module that is only in
+LIBS:OpenGPU/ to LIBS:GFOpenGPU/. Run it again to update the game: your
+players, settings, saved games and own levels are kept.
+
+Playing
+-------
+
+- Double-click the game's icon, or from a Shell: cd to the drawer, then
+  rocksndiamonds. It loads its graphics for a minute or two, then shows its
+  menu on an 800x600 screen of its own. F11 or Alt+Return switches to a
+  window on the Workbench and back.
+- The cursor keys move; Left Ctrl with a direction snaps (digs or collects
+  without moving); Right Ctrl places dynamite; Space pauses; Escape leaves
+  a game. Return chooses in the menus.
+- F1 saves the game you are playing (on the tape), F2 loads it again.
+- A joystick or pad in port 2 also moves player 1: the first button snaps.
+- The level sets are the three tutorials (Niko Boehm's, Aaron Davidson's
+  and ncrecc's). More level sets from the Rocks'n'Diamonds web site can be
+  unpacked into the drawer userdata/levels.
+- Everything the game writes is in the drawer userdata (made on the first
+  start): players, settings, saved games, scores, your own levels.
+- There is no network play in this build.
+
+Licence
+-------
+
+Rocks'n'Diamonds is GPL-2.0 (COPYING in the drawer), (c) 1995-2026 Holger
+Schemel, Artsoft Entertainment; its source is at
+https://github.com/ArtsoftEntertainment/rocksndiamonds. The game's own
+data in this drawer (graphics, sounds, the rhythm loop, the tutorial level
+sets, the help texts) is upstream's own and is shipped under the same
+GPL-2.0 terms that upstream's and Arch Linux's packages give it; Debian
+treats its licence as unclear. The classic level sets of the original
+games and the three music modules from upstream's tree are not included.
+The credits are in docs/credits.
+
+Build
+-----
+
+Upstream commit @UPSTREAM_COMMIT@,
+built with GFOpenAmigaGCC @COMPILER_RELEASE@. The program's SHA-256:
+@EXECUTABLE_SHA256@
+
+Port: the AmiCradle Team, https://github.com/DalsinAI/amigarocksndiamonds
