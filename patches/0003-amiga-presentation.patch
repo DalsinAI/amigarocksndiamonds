@@ -1,3 +1,18 @@
+--- a/src/files.c
++++ b/src/files.c
+@@ -12723,6 +12723,12 @@
+   si->touch.overlay_buttons		= TRUE;
+ #endif
+ 
++#if defined(PLATFORM_AMIGA)
++  // AmigaOS: a screen of its own by default (Setup, Graphics, Fullscreen
++  // off, or Alt+Return, gives a window on the Workbench)
++  si->fullscreen			= TRUE;
++#endif
++
+   setHideSetupEntry(&setup.debug.xsn_mode);
+ }
+ 
 --- a/src/libgame/sdl.c
 +++ b/src/libgame/sdl.c
 @@ -80,11 +80,60 @@
@@ -107,3 +122,41 @@
    }
    else
    {
+@@ -695,7 +767,13 @@
+   SDL_Surface *new_surface = NULL;
+ 
+   int surface_flags_window     = SURFACE_FLAGS;
++#if defined(PLATFORM_AMIGA)
++  // AmigaOS: a screen of the game's own, in the display mode closest to its
++  // frame, not the desktop's mode with the frame scaled to fill it
++  int surface_flags_fullscreen = SURFACE_FLAGS | SDL_WINDOW_FULLSCREEN;
++#else
+   int surface_flags_fullscreen = SURFACE_FLAGS | SDL_WINDOW_FULLSCREEN_DESKTOP;
++#endif
+ 
+ #if 1
+   int renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
+@@ -779,6 +857,11 @@
+       // SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+       SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, setup.window_scaling_quality);
+ 
++#if defined(PLATFORM_AMIGA)
++      // AmigaOS: the frame in whole pixels, centred on a larger screen
++      SDL_RenderSetIntegerScale(sdl_renderer, SDL_TRUE);
++#endif
++
+       // required for setting adaptive vsync when using OpenGL renderer
+       SDLSetScreenVsyncMode(setup.vsync_mode);
+ 
+@@ -960,7 +1043,11 @@
+   if (sdl_window == NULL)
+     return;
+ 
++#if defined(PLATFORM_AMIGA)
++  int flags = (fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
++#else
+   int flags = (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
++#endif
+ 
+   if (SDL_SetWindowFullscreen(sdl_window, flags) == 0)
+     video.fullscreen_enabled = fullscreen_enabled = fullscreen;
