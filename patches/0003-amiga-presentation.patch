@@ -1,6 +1,6 @@
 --- a/src/libgame/sdl.c
 +++ b/src/libgame/sdl.c
-@@ -80,11 +80,59 @@
+@@ -80,11 +80,60 @@
      gfx.draw_global_anim_function(draw_target, DRAW_GLOBAL_ANIM_STAGE_3);
  }
  
@@ -17,10 +17,11 @@
 +
 +  if (enabled < 0)
 +  {
-+    enabled = (getenv("RND_FPS") != NULL);
++    // SDL's getenv (dos.library's GetVar), which sees ENV: as SetEnv sets it
++    enabled = (SDL_getenv("RND_FPS") != NULL);
 +
-+    if (enabled)
-+      SDL_Log("frame log on at %u ms", now);
++    SDL_Log("first frame shown %u ms after SDL started%s", now,
++	    enabled ? "; frame log on" : "");
 +  }
 +
 +  if (!enabled)
@@ -60,7 +61,7 @@
    static DelayCounter update_screen_delay = { 50 };	// (milliseconds)
    SDL_Surface *screen = backbuffer->surface;
  
-@@ -245,6 +293,10 @@
+@@ -245,6 +294,10 @@
    DrawTouchGadgetsOverlay();
  #endif
  
@@ -71,7 +72,7 @@
    // global synchronization point of the game to align video frame delay
    if (with_frame_delay)
      WaitUntilDelayReached(&video.frame_delay);
-@@ -252,8 +304,16 @@
+@@ -252,8 +305,16 @@
    video.frame_counter++;
  
    // show render target buffer on screen
@@ -88,7 +89,7 @@
    window_resized = FALSE;
  }
  
-@@ -457,6 +517,17 @@
+@@ -457,6 +518,17 @@
    {
      format = *backbuffer->surface->format;
      format.Amask = surface->format->Amask;	// keep alpha channel
