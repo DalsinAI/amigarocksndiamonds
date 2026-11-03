@@ -29,6 +29,7 @@ patches, applied to a copy:
 |---|---|
 | `0001-amiga-platform.patch` | AmigaOS is a platform of its own (upstream would take it for Unix: `pwd.h`, `/dev/urandom`, signals): the data in the program's drawer (`PROGDIR:`), the user data in `PROGDIR:userdata` (upstream's own name for it on systems without a home directory); AmigaDOS path joining (`PROGDIR:` and `levels` make `PROGDIR:levels`, as a `/` after the colon would mean the parent drawer); the random seed from the clock; 32-bit offsets for the zip code (libnix has no 64-bit file calls) |
 | `0002-amiga-no-network.patch` | No network code: `src/libgame/net_none.c` takes the place of SDL_net, every call failing as SDL_net does with no network. Network games and the score server are then unavailable, as upstream handles a network it cannot reach; the program needs no TCP/IP stack and opens no `bsdsocket.library` |
+| `0003-amiga-presentation.patch` | Images with alpha on a big-endian machine (upstream keeps an RGBA image's alpha mask, which falls on the back buffer's blue byte on a 68k, and SDL knows no such format: the game stopped at its first image); on AmigaOS full screen is a screen of the game's own in the display mode closest to its 672x560 frame, the frame drawn 1:1 in the middle, and it is the default; with `SetEnv RND_FPS 1` each second's frame rate goes to the program's output |
 
 What could stop it: the game draws every frame by the CPU into a 672x560
 32-bit surface and has SDL copy that to the screen, about 1.5 MB a frame.
@@ -86,6 +87,23 @@ The program reads `graphics/`, `sounds/`, `music/`, `levels/`, `docs/` and
 `SDL2_image.module` and `SDL2_mixer.module` (in `LIBS:GFOpenGPU/`, and in
 `LIBS:OpenGPU/` for older systems), and a 68040 or 68060 with its FPU.
 
+## Running
+
+`rocksndiamonds` with no options opens a screen of its own in the display
+mode closest to the game's 672x560 frame (800x600 on AmiCradle's RTG) and
+draws the frame on it unscaled, in the middle (upstream's full screen is the
+desktop's mode with the frame scaled to fill it). F11 or Alt+Return
+(upstream's keys), or Setup, Graphics, Fullscreen, switch to a window on the
+Workbench and back; the choice is saved. Upstream's own controls: the
+cursor keys move, Left Ctrl snaps (digs or collects without moving), Right
+Ctrl places dynamite, Space pauses, Escape leaves a game. Settings, scores,
+tapes and the user's own levels are in `PROGDIR:userdata`.
+
+`SetEnv RND_FPS 1` before starting it logs each second's frame rate and
+the time each frame took to reach the screen to the program's output (`Run
+>RAM:rnd.log rocksndiamonds`), with the time of the first frame shown on
+every start.
+
 ## Status
 
 **TESTING**, not RELEASE (see Observed below and the release gates in
@@ -94,7 +112,7 @@ amicradle `docs/porting/MEASUREMENT.md`).
 | Gate | State |
 |---|---|
 | Pinned source, reproducible build, receipts | done (open5, Cradle) |
-| Launch to the title and menu | not yet |
+| Launch to the title and menu, a screen of its own, the frame 1:1 | done (menus and play at the game's 50 frames a second) |
 | Keyboard play | not yet |
 | Joystick / pad | not yet |
 | Sound | not yet |
@@ -158,3 +176,42 @@ program opened its 672x560 window on the Workbench, made
 drawer, and showed upstream's own error screen: `SDL_ConvertSurface()
 failed: Unknown pixel format`. That is an upstream big-endian fault, fixed
 in the presentation step.
+
+### Presentation, 3 November 2026
+
+Commit `fe2fbd6` fixed the stop at the first image (`0003`, the alpha mask
+on a big-endian machine); the later commits of the step add the frame log
+and the screen of its own. Final build: commit `3783f4d`, Cradle job
+`j20261103T092616-2d5f5e`, SHA-256
+`7bdc3127436411275cb482928e226f8afea089224737c4a1d997c95ce4f629b5`
+(3,035,024 bytes; `receipts/2-presentation-open5-stove_build.json`). In
+`lab:rnd` as above, from a Shell, `SetEnv RND_FPS 1`:
+
+- Loading: upstream's own loading screen, then each graphics sheet
+  converted in turn; the menu after 1 to 2 minutes of wall time in this
+  lab (16 to 60 seconds by SDL's own clock: the lab's clock ran slow under
+  the host's load).
+- **The window** (upstream's default; the build of `f4e4243`, job
+  `j20261103T091530-3afb54`, before full screen became the default): the menu and a
+  level of Niko Böhm's tutorial at **49 to 50 frames a second** in nearly
+  every one-second reading over almost three minutes (42.7 at the lowest),
+  the game's own rate (it draws a frame each 20 ms); putting a frame on
+  the screen (the texture update, upstream's two copies, the present) took
+  9 to 13 ms on average.
+- **Upstream's full screen** (`fullscreen: true`, SDL's desktop full
+  screen): a 640x480 screen, the 672x560 frame squeezed to fit it, out of
+  proportion, and mostly 41 to 50 frames a second, with dips to 27 (and one
+  reading of 8.9).
+- **This build's full screen** (the default now): an 800x600 screen of its
+  own (`window surface in video RAM (800x600)`), the frame 1:1 in the middle
+  with a black border. Menus and play at 44 to 50 frames a second, with
+  short dips to 20 to 35 when the host was busiest, and 50.0 with 2 to 3 ms
+  a frame in the quieter stretch at the end. Alt+Return gave the window on
+  the Workbench and Alt+Return again the screen; Quit wrote
+  `PROGDIR:userdata/setup.conf` with `fullscreen: on`.
+
+![The menu on its own 800x600 screen](docs/observed/step2-menu-800x600.png)
+![The first tutorial level](docs/observed/step2-play-800x600.png)
+![The window on the Workbench (upstream's default)](docs/observed/step2-menu-window.png)
+
+Not tried: an RTG board without an 800x600 mode, AGA without RTG.
