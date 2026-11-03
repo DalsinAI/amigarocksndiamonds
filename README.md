@@ -290,7 +290,7 @@ upstream's sound settings (sound effects, loops and music on, 22,050 Hz):
   `setup.conf` logged `1024 samples a buffer (asked 22050 Hz, 1024
   samples)`. 46 ms is short enough for this game's effects.
 - No whole-lab stop or freeze in any run in this lab, steps 2 to 5,
-  every one with sound on (eleven starts of the game). The classic music
+  every one with sound on (twelve starts of the game). The classic music
   modules are not packed (see Data and licences), and SDL2_mixer.module
   has no module player anyway, so only the effects and upstream's rhythm
   loop play; in-game music is silent.
