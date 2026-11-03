@@ -32,3 +32,6 @@ rocksndiamonds.exe
 
 # ignore local configuration files
 build-scripts/make_dist.conf
+/build-amiga/
+/build-amiga-package/
+/runtime-data/build-amiga/

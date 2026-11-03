@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "ports": {
+    "rocksndiamonds": {
+      "title": "Rocks'n'Diamonds",
+      "source": {
+        "kind": "git",
+        "url": "https://github.com/ArtsoftEntertainment/rocksndiamonds.git",
+        "commit": "b42509b0cc55e6eb6b48953be946c09ac24cf6a3",
+        "version": "4.4.2.4",
+        "submodules": false,
+        "imported": "Upstream tree imported into this repository at 83f44f2 (file for file the same as the upstream commit, which was also upstream's head on 3 November 2026); build-amiga.sh builds it as imported, with patches/ applied to a copy"
+      },
+      "contentPolicy": "Engine GPL-2.0 (Artsoft Entertainment, Holger Schemel; COPYING). The game data in the tree carries no licence of its own (README, Data and licences): the classic level sets recreate commercial games' levels and the three music modules are third-party demoscene tracks, so neither is ever packed; upstream's own graphics, sounds, rhythm loop, tutorials and documents are packed for lab runs only until Dale decides on them.",
+      "runtimeData": {
+        "mode": "lab-only",
+        "dirs": ["graphics/gfx_classic", "sounds/snd_classic", "music/mus_classic", "levels/Tutorials", "docs", "conf"],
+        "excluded": ["levels/Classic_Games", "music/mus_classic/mod.apoplexy", "music/mus_classic/mod.apoplexy.txt", "music/mus_classic/mod.chiptune", "music/mus_classic/mod.chiptune.txt", "music/mus_classic/mod.cream_of_the_earth", "music/mus_classic/mod.cream_of_the_earth.txt", "graphics/Makefile"]
+      },
+      "user": "PROGDIR:userdata"
+    }
+  }
+}
