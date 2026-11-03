@@ -322,8 +322,8 @@ started with none:
   NAME: AMIGA.
 - Setup, Sound & Music: "Sound effects (looping)" from on to off.
 - Start Game (the first level of Niko Böhm's tutorial), 25 seconds of
-  HoldKeys play, then F1: "TAPE SAVED" at 0:49 of the level's clock, score
-  80. `users/001/tapes/rnd_tutorial_niko_boehm/001.tape` (238 bytes) and
+  HoldKeys play, then F1: "TAPE SAVED" at 0:49 of the level's clock.
+  `users/001/tapes/rnd_tutorial_niko_boehm/001.tape` (238 bytes) and
   the player's `setup.conf` with `player_name: amiga` and
   `repeating_sound_loops: off` were written.
 - Escape, Yes; Quit, Yes: a clean exit.
