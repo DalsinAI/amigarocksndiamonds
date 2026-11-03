@@ -1,0 +1,20 @@
+--- a/src/libgame/sdl.c
++++ b/src/libgame/sdl.c
+@@ -457,6 +457,17 @@
+   {
+     format = *backbuffer->surface->format;
+     format.Amask = surface->format->Amask;	// keep alpha channel
++
++#if SDL_BYTEORDER == SDL_BIG_ENDIAN
++    /* the image's own alpha mask may share bits with the back buffer's
++       colours: an RGBA image (SDL_PIXELFORMAT_RGBA32) has its alpha in the
++       low byte on a big-endian machine, where the back buffer has blue, and
++       SDL then knows no such format; keep alpha in the bits the colours
++       leave free instead, as it falls on a little-endian machine */
++    if (format.Amask != 0 && format.BitsPerPixel == 32 &&
++	(format.Amask & (format.Rmask | format.Gmask | format.Bmask)) != 0)
++      format.Amask = ~(format.Rmask | format.Gmask | format.Bmask);
++#endif
+   }
+   else
+   {
