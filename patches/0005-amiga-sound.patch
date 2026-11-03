@@ -94,3 +94,16 @@
    Mix_HaltMusic();
    Mix_HaltChannel(-1);
  
+--- a/src/libgame/sound.h
++++ b/src/libgame/sound.h
+@@ -38,6 +38,10 @@
+ 
+ #if defined(PLATFORM_WINDOWS)
+ #define DEFAULT_AUDIO_FRAGMENT_SIZE	AUDIO_FRAGMENT_SIZE_1024
++#elif defined(PLATFORM_AMIGA)
++// AmigaOS: 1024 samples (46 ms at 22,050 Hz); with 512 about one buffer
++// in 140 came more than half a buffer late in play, with 1024 one in 1,500
++#define DEFAULT_AUDIO_FRAGMENT_SIZE	AUDIO_FRAGMENT_SIZE_1024
+ #else
+ #define DEFAULT_AUDIO_FRAGMENT_SIZE	AUDIO_FRAGMENT_SIZE_512
+ #endif
