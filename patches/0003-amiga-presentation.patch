@@ -1,6 +1,6 @@
 --- a/src/libgame/sdl.c
 +++ b/src/libgame/sdl.c
-@@ -80,11 +80,66 @@
+@@ -80,11 +80,59 @@
      gfx.draw_global_anim_function(draw_target, DRAW_GLOBAL_ANIM_STAGE_3);
  }
  
@@ -8,7 +8,7 @@
 +// AmigaOS, with the variable RND_FPS set (SetEnv RND_FPS 1): each second,
 +// the frames shown, and the time each took to put on the screen (the
 +// texture update, the copies and the present, without the wait for the
-+// game's frame delay), in the log
++// game's frame delay), through SDL's log (the program's output)
 +static void AmigaLogFrameRate(unsigned int work_ms)
 +{
 +  static int enabled = -1;
@@ -20,13 +20,7 @@
 +    enabled = (getenv("RND_FPS") != NULL);
 +
 +    if (enabled)
-+    {
-+      Print("frame rate log on: ticks %u ms, performance counter %lu of %lu a second\n",
-+	    now, (unsigned long)SDL_GetPerformanceCounter(),
-+	    (unsigned long)SDL_GetPerformanceFrequency());
-+      if (program.log_file != NULL)
-+	fflush(program.log_file);
-+    }
++      SDL_Log("frame log on at %u ms", now);
 +  }
 +
 +  if (!enabled)
@@ -40,14 +34,13 @@
 +  if (work_ms > work_max)
 +    work_max = work_ms;
 +
-+  if (now - start >= 1000 || frames >= 100)
++  if (now - start >= 1000)
 +  {
-+    Print("fps %.1f at %.3f s (screen update %.1f ms a frame, %u ms at most)\n",
-+	  1000.0 * frames / (now - start), now / 1000.0,
-+	  (double)work / frames, work_max);
-+
-+    if (program.log_file != NULL)
-+      fflush(program.log_file);
++    SDL_Log("fps %d.%d at %u.%03u s (screen update %u.%u ms a frame, %u ms at most)",
++	    (int)(10000 * frames / (now - start)) / 10,
++	    (int)(10000 * frames / (now - start)) % 10,
++	    now / 1000, now % 1000,
++	    10 * work / frames / 10, 10 * work / frames % 10, work_max);
 +
 +    start = now;
 +    frames = work = work_max = 0;
@@ -67,7 +60,7 @@
    static DelayCounter update_screen_delay = { 50 };	// (milliseconds)
    SDL_Surface *screen = backbuffer->surface;
  
-@@ -245,6 +300,10 @@
+@@ -245,6 +293,10 @@
    DrawTouchGadgetsOverlay();
  #endif
  
@@ -78,7 +71,7 @@
    // global synchronization point of the game to align video frame delay
    if (with_frame_delay)
      WaitUntilDelayReached(&video.frame_delay);
-@@ -252,8 +311,16 @@
+@@ -252,8 +304,16 @@
    video.frame_counter++;
  
    // show render target buffer on screen
@@ -95,7 +88,7 @@
    window_resized = FALSE;
  }
  
-@@ -457,6 +524,17 @@
+@@ -457,6 +517,17 @@
    {
      format = *backbuffer->surface->format;
      format.Amask = surface->format->Amask;	// keep alpha channel
