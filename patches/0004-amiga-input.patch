@@ -1,0 +1,118 @@
+--- a/src/events.c
++++ b/src/events.c
+@@ -199,11 +199,90 @@
+    has to be handled at a later stage in the event processing functions
+    (when device pixel positions are already converted to screen positions) */
+ 
++#if defined(PLATFORM_AMIGA)
++// AmigaOS, with the variable RND_INPUT set (SetEnv RND_INPUT 1): every key,
++// joystick and game controller event the game takes, with its time,
++// through SDL's log (the program's output)
++static void AmigaLogInputEvent(Event *event)
++{
++  static int enabled = -1;
++  unsigned int t = SDL_GetTicks();
++
++  if (enabled < 0)
++    enabled = (SDL_getenv("RND_INPUT") != NULL);
++
++  if (!enabled)
++    return;
++
++  switch (event->type)
++  {
++    case SDL_KEYDOWN:
++    case SDL_KEYUP:
++      SDL_Log("input %u.%03u key %s %s (scancode %d)", t / 1000, t % 1000,
++	      SDL_GetKeyName(event->key.keysym.sym),
++	      event->type == SDL_KEYDOWN ? "down" : "up",
++	      (int)event->key.keysym.scancode);
++      break;
++
++    case SDL_JOYAXISMOTION:
++      SDL_Log("input %u.%03u joystick %d axis %d %d", t / 1000, t % 1000,
++	      (int)event->jaxis.which, (int)event->jaxis.axis,
++	      (int)event->jaxis.value);
++      break;
++
++    case SDL_JOYBUTTONDOWN:
++    case SDL_JOYBUTTONUP:
++      SDL_Log("input %u.%03u joystick %d button %d %s", t / 1000, t % 1000,
++	      (int)event->jbutton.which, (int)event->jbutton.button,
++	      event->type == SDL_JOYBUTTONDOWN ? "down" : "up");
++      break;
++
++    case SDL_JOYHATMOTION:
++      SDL_Log("input %u.%03u joystick %d hat %d %d", t / 1000, t % 1000,
++	      (int)event->jhat.which, (int)event->jhat.hat,
++	      (int)event->jhat.value);
++      break;
++
++    case SDL_CONTROLLERAXISMOTION:
++      SDL_Log("input %u.%03u controller %d axis %s %d", t / 1000, t % 1000,
++	      (int)event->caxis.which,
++	      SDL_GameControllerGetStringForAxis(event->caxis.axis),
++	      (int)event->caxis.value);
++      break;
++
++    case SDL_CONTROLLERBUTTONDOWN:
++    case SDL_CONTROLLERBUTTONUP:
++      SDL_Log("input %u.%03u controller %d button %s %s", t / 1000, t % 1000,
++	      (int)event->cbutton.which,
++	      SDL_GameControllerGetStringForButton(event->cbutton.button),
++	      event->type == SDL_CONTROLLERBUTTONDOWN ? "down" : "up");
++      break;
++
++    case SDL_JOYDEVICEADDED:
++    case SDL_JOYDEVICEREMOVED:
++    case SDL_CONTROLLERDEVICEADDED:
++    case SDL_CONTROLLERDEVICEREMOVED:
++      SDL_Log("input %u.%03u device event 0x%x, device %d", t / 1000, t % 1000,
++	      (unsigned int)event->type, (int)event->cdevice.which);
++      break;
++
++    default:
++      break;
++  }
++}
++#endif
++
+ boolean NextValidEvent(Event *event)
+ {
+   while (PendingEvent())
+     if (WaitValidEvent(event))
++    {
++#if defined(PLATFORM_AMIGA)
++      AmigaLogInputEvent(event);
++#endif
++
+       return TRUE;
++    }
+ 
+   return FALSE;
+ }
+--- a/src/libgame/sdl.c
++++ b/src/libgame/sdl.c
+@@ -3030,6 +3030,22 @@
+     joystick.nr[i] = joystick_nr;
+   }
+ 
++#if defined(PLATFORM_AMIGA)
++  // AmigaOS: the joysticks and pads SDL finds, in the program's output
++  SDL_Log("%d joystick(s) found", SDL_NumJoysticks());
++
++  for (i = 0; i < SDL_NumJoysticks(); i++)
++  {
++    const char *name = (SDL_IsGameController(i) ?
++			SDL_GameControllerNameForIndex(i) :
++			SDL_JoystickNameForIndex(i));
++
++    SDL_Log("joystick %d (%s): \"%s\"", i,
++	    SDL_IsGameController(i) ? "game controller" : "joystick",
++	    name ? name : "(unknown)");
++  }
++#endif
++
+   // now open all connected joysticks (regardless if configured or not)
+   for (i = 0; i < SDL_NumJoysticks(); i++)
+   {
