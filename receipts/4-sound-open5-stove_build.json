@@ -1,0 +1,39 @@
+{
+  "upstream_commit": "b42509b0cc55e6eb6b48953be946c09ac24cf6a3",
+  "repository_commit": "7e9092f367f4807bf33b105be9cdad72406c5200",
+  "source_date_epoch": "1793699989",
+  "recipe": {
+    "build-amiga.sh": "fac2ae15e04480b42e6ccbe9e2ce9c31e233976b5126d0cf6ff864058eb0b6ea"
+  },
+  "patches": {
+    "0001-amiga-platform.patch": "32f5f6cb9204fc5cd2d20ce10452788a3508c9fc2bd32d9cd2c41d9425ae8e2a",
+    "0002-amiga-no-network.patch": "959342aa64622e71e005e1a4246910c7d3ec1c0e92a837b0a2e785cc8a0d9ff3",
+    "0003-amiga-presentation.patch": "18b025f397c4b1dacb061b1e70efd2454213ab2a873af48f0bbbdbcc81e77b7b",
+    "0004-amiga-input.patch": "b23639b4e5334a23340d1fc12322275ab8640be12604c0a9258fe18b84667dac",
+    "0005-amiga-sound.patch": "96e801d70d78141d18e593d9f5b6dacf5f0b9d0713e457b4af63554362bb9baf"
+  },
+  "compiler_release": "16.2.0-open5",
+  "compiler_archive_sha256": "unpublished",
+  "sdk_inputs": {
+    "lib/libSDL2.a": "215d6ea9a61c690274596009ae5e7c4d1c2b3ba8f0a70129d6557abdf4230397",
+    "lib/libSDL2_image.a": "758b8ecda0620688f2745b73deef9611e80f999341232b01618a42383da35da6",
+    "lib/libSDL2_mixer.a": "07caf8b29e1a599799f627083058f2856f32e00b590c6e1f541d864af86e696c",
+    "lib/libGL.a": "922247c40ca2aceda1f5a0e4517e5a4e0a7bc16b056e659235ccde0b839f6d39",
+    "include/SDL2/SDL.h": "952e89e1dc4e0dd1a7bea6a153df632b8cdb6e433a9b3b0702c5ffe15b9b9360",
+    "include/SDL2/SDL_image.h": "f72b0187df3b81109d0a561db0fbde3f1be1ee10f30552a9fd4756ae11bcf7fd",
+    "include/SDL2/SDL_mixer.h": "d7284c74e5abe94049b5b483084edd0980faa0050144631931a7359c14f35851",
+    "include/SDL2/SDL_net.h": "334edc2679056c6447fc2453071bdda01b2923b921615f02831954fcff467b68",
+    "port-deps/lib/libz.a": "0df1c8b8e34a4a9eb39d74f3a5f4d525aa35f0cab38ef15394b458e5edcc2552",
+    "port-deps/include/zlib.h": "71e0dcf4cacb6b1674550a3d9407344746d27cdce739e6e25189d0b620b005ed"
+  },
+  "network": false,
+  "executable_sha256": "ea1e66628125c98e7d7067bdbf897474c924253327882f33954b4213a6ef939b",
+  "executable_bytes": 3037644,
+  "scope": "Source build only; no network code (patches/0002); no runtime or release pass implied",
+  "compiler_files_sha256": {
+    "bin/m68k-amigaos-gcc": "b20d61e9dcd2defe093c0f562e96611e6f5ae3cb0588cf1063463fd913f189f6",
+    "bin/m68k-amigaos-as": "c93fe82ebda280d861ca65ab68fec2d64e63c89fd327a069bcf1c5928e295c46",
+    "bin/m68k-amigaos-ld": "c55353a0e0c7c9d55574c5cbd6c633c11b4357fb078d9615582ea313b0fcdf88",
+    "libexec/gcc/m68k-amigaos/16.2.0b/cc1": "d638cf066b6751a106e779a56f20c4b3ebfa62df30a2889f4767540477334399"
+  }
+}
