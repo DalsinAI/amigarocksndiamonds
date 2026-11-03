@@ -30,6 +30,7 @@ patches, applied to a copy:
 | `0001-amiga-platform.patch` | AmigaOS is a platform of its own (upstream would take it for Unix: `pwd.h`, `/dev/urandom`, signals): the data in the program's drawer (`PROGDIR:`), the user data in `PROGDIR:userdata` (upstream's own name for it on systems without a home directory); AmigaDOS path joining (`PROGDIR:` and `levels` make `PROGDIR:levels`, as a `/` after the colon would mean the parent drawer); the random seed from the clock; 32-bit offsets for the zip code (libnix has no 64-bit file calls) |
 | `0002-amiga-no-network.patch` | No network code: `src/libgame/net_none.c` takes the place of SDL_net, every call failing as SDL_net does with no network. Network games and the score server are then unavailable, as upstream handles a network it cannot reach; the program needs no TCP/IP stack and opens no `bsdsocket.library` |
 | `0003-amiga-presentation.patch` | Images with alpha on a big-endian machine (upstream keeps an RGBA image's alpha mask, which falls on the back buffer's blue byte on a 68k, and SDL knows no such format: the game stopped at its first image); on AmigaOS full screen is a screen of the game's own in the display mode closest to its 672x560 frame, the frame drawn 1:1 in the middle, and it is the default; with `SetEnv RND_FPS 1` each second's frame rate goes to the program's output |
+| `0004-amiga-input.patch` | On AmigaOS each start logs the joysticks and game controllers SDL finds; with `SetEnv RND_INPUT 1` every key, joystick and controller event the game takes goes to the program's output with its time. Upstream's input itself is unchanged |
 
 What could stop it: the game draws every frame by the CPU into a 672x560
 32-bit surface and has SDL copy that to the screen, about 1.5 MB a frame.
@@ -99,6 +100,12 @@ cursor keys move, Left Ctrl snaps (digs or collects without moving), Right
 Ctrl places dynamite, Space pauses, Escape leaves a game. Settings, scores,
 tapes and the user's own levels are in `PROGDIR:userdata`.
 
+A joystick or pad: upstream gives any connected one to player 1 while no
+player has a joystick configured, beside the keyboard, so a stick in port 2
+(or a GFOpenInput pad) works with no setup; Setup, Input Devices chooses
+one for each player; upstream's settings give the first button snap and
+the second dynamite.
+
 `SetEnv RND_FPS 1` before starting it logs each second's frame rate and
 the time each frame took to reach the screen to the program's output (`Run
 >RAM:rnd.log rocksndiamonds`), with the time of the first frame shown on
@@ -113,8 +120,8 @@ amicradle `docs/porting/MEASUREMENT.md`).
 |---|---|
 | Pinned source, reproducible build, receipts | done (open5, Cradle) |
 | Launch to the title and menu, a screen of its own, the frame 1:1 | done (menus and play at the game's 50 frames a second) |
-| Keyboard play | not yet |
-| Joystick / pad | not yet |
+| Keyboard play | done (menus, moving, digging, collecting, snapping; every key in the input log) |
+| Joystick / pad | not tested: SDL finds and opens port 2 as a game controller; no stick in the lab |
 | Sound | not yet |
 | Settings, scores and tapes across a cold restart | not yet |
 | Drawer with GlowIcons, LhA package, installed on a fresh lab from the LhA alone | not yet |
@@ -215,3 +222,38 @@ and the screen of its own. Final build: commit `3783f4d`, Cradle job
 ![The window on the Workbench (upstream's default)](docs/observed/step2-menu-window.png)
 
 Not tried: an RTG board without an 800x600 mode, AGA without RTG.
+
+### Controls, 3 November 2026
+
+Commit `03cfbba` adds `patches/0004-amiga-input.patch` and the lab tools in
+`tests/lab` (HoldKeys from amigakobodeluxe; PortWatch, ScreenGrab and
+SplitFile from amigachocolatedoom; Cradle job `j20261103T093709-2b0a7f`).
+Executable (open5, Cradle job `j20261103T093747-df4d02`): SHA-256
+`13ee64696dea8e8fef0fa0a2c4a6055dc2dfd082743daac76428206b1a4bd448`
+(3,036,844 bytes; `receipts/3-input-open5-stove_build.json`).
+
+In `lab:rnd`, on the game's own screen, `SetEnv RND_INPUT 1`:
+
+- Return started the first level of Niko Böhm's tutorial;
+  `HoldKeys 30 CYCLE 4E,4D,4E,4D,4F,4C PERIOD 30` then held the cursor
+  keys in turn (right, down, right, down, left, up), about 1.1 s each, for
+  55 seconds of the game's clock. The player dug through the sand in all
+  four directions and collected (score 20, the emeralds still needed down
+  from 64 to 48). The input log has every one of those presses and
+  releases with its time (`input 131.944 key Right down` ...).
+- `HoldKeys 6 HOLD 63 CYCLE 4C,4F PERIOD 30`: Left Ctrl held with Up and
+  Left in turn. The player stayed where he was and the sand beside him went:
+  upstream's snap.
+- Escape and Return left the game; Down, Down, Return and Return quit:
+  the menus answered each key.
+
+![Tunnels dug in all four directions](docs/observed/step3-keyboard-dug.png)
+![Snapping: the sand to the left gone, the player where he was](docs/observed/step3-keyboard-snap.png)
+
+Joystick and pad: not qualified. The log has `1 joystick(s) found` and
+`joystick 0 (game controller): "Amiga joystick port (2): joystick"`, so SDL
+finds port 2 and the game opens it, but this lab has no stick: PortWatch
+reports lowlevel.library's `ReadJoyPort(1)` as `type not available` (and
+port 0, the mouse port, as `unknown`), and no stick or pad event was made.
+A person with a stick or a CD32 pad in port 2 has to try it: in a level,
+the stick should move the player and the red button snap.
