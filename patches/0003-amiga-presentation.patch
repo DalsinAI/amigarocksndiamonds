@@ -1,6 +1,90 @@
 --- a/src/libgame/sdl.c
 +++ b/src/libgame/sdl.c
-@@ -457,6 +457,17 @@
+@@ -80,11 +80,55 @@
+     gfx.draw_global_anim_function(draw_target, DRAW_GLOBAL_ANIM_STAGE_3);
+ }
+ 
++#if defined(PLATFORM_AMIGA)
++// AmigaOS, with the variable RND_FPS set (SetEnv RND_FPS 1): each second,
++// the frames shown, and the time each took to put on the screen (the
++// texture update, the copies and the present, without the wait for the
++// game's frame delay), in the log
++static void AmigaLogFrameRate(unsigned int work_ms)
++{
++  static int enabled = -1;
++  static unsigned int start = 0, frames = 0, work = 0, work_max = 0;
++  unsigned int now = SDL_GetTicks();
++
++  if (enabled < 0)
++    enabled = (getenv("RND_FPS") != NULL);
++
++  if (!enabled)
++    return;
++
++  if (start == 0)
++    start = now;
++
++  frames++;
++  work += work_ms;
++  if (work_ms > work_max)
++    work_max = work_ms;
++
++  if (now - start >= 1000)
++  {
++    Print("fps %.1f at %.3f s (screen update %.1f ms a frame, %u ms at most)\n",
++	  1000.0 * frames / (now - start), now / 1000.0,
++	  (double)work / frames, work_max);
++
++    if (program.log_file != NULL)
++      fflush(program.log_file);
++
++    start = now;
++    frames = work = work_max = 0;
++  }
++}
++#endif
++
+ static void UpdateScreenExt(SDL_Rect *rect, boolean with_frame_delay)
+ {
+   if (program.headless)
+     return;
+ 
++#if defined(PLATFORM_AMIGA)
++  unsigned int amiga_frame_start = SDL_GetTicks();
++#endif
++
+   static DelayCounter update_screen_delay = { 50 };	// (milliseconds)
+   SDL_Surface *screen = backbuffer->surface;
+ 
+@@ -245,6 +289,10 @@
+   DrawTouchGadgetsOverlay();
+ #endif
+ 
++#if defined(PLATFORM_AMIGA)
++  unsigned int amiga_work_ms = SDL_GetTicks() - amiga_frame_start;
++#endif
++
+   // global synchronization point of the game to align video frame delay
+   if (with_frame_delay)
+     WaitUntilDelayReached(&video.frame_delay);
+@@ -252,8 +300,16 @@
+   video.frame_counter++;
+ 
+   // show render target buffer on screen
++#if defined(PLATFORM_AMIGA)
++  unsigned int amiga_present_start = SDL_GetTicks();
++#endif
++
+   SDL_RenderPresent(sdl_renderer);
+ 
++#if defined(PLATFORM_AMIGA)
++  AmigaLogFrameRate(amiga_work_ms + (SDL_GetTicks() - amiga_present_start));
++#endif
++
+   window_resized = FALSE;
+ }
+ 
+@@ -457,6 +513,17 @@
    {
      format = *backbuffer->surface->format;
      format.Amask = surface->format->Amask;	// keep alpha channel
