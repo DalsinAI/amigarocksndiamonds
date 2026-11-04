@@ -1,0 +1,109 @@
+--- a/src/libgame/sdl.c
++++ b/src/libgame/sdl.c
+@@ -81,6 +81,28 @@
+ }
+ 
+ #if defined(PLATFORM_AMIGA)
++// AmigaOS: SDL_mixer's buffers, counted in its post-mix hook (the audio
++// thread only counts; the main thread logs them with the frame rate)
++static volatile unsigned int amiga_audio_buffers = 0;
++static volatile unsigned int amiga_audio_late = 0;
++static volatile unsigned int amiga_audio_last = 0;
++static unsigned int amiga_audio_buffer_ms = 0;
++
++static void SDLCALL AmigaAudioPostMix(void *udata, Uint8 *stream, int len)
++{
++  unsigned int now = SDL_GetTicks();
++
++  // a buffer later than one and a half buffers after the one before it
++  if (amiga_audio_last != 0 &&
++      now - amiga_audio_last > amiga_audio_buffer_ms * 3 / 2)
++    amiga_audio_late++;
++
++  amiga_audio_last = now;
++  amiga_audio_buffers++;
++}
++#endif
++
++#if defined(PLATFORM_AMIGA)
+ // AmigaOS, with the variable RND_FPS set (SetEnv RND_FPS 1): each second,
+ // the frames shown, and the time each took to put on the screen (the
+ // texture update, the copies and the present, without the wait for the
+@@ -122,6 +144,24 @@
+     start = now;
+     frames = work = work_max = 0;
+   }
++
++  // every five seconds: the audio buffers mixed, and how many came late
++  static unsigned int audio_start = 0;
++
++  if (audio_start == 0)
++    audio_start = now;
++
++  if (now - audio_start >= 5000 && amiga_audio_buffer_ms != 0)
++  {
++    unsigned int buffers = amiga_audio_buffers, late = amiga_audio_late;
++
++    amiga_audio_buffers = amiga_audio_late = 0;
++
++    SDL_Log("audio %u buffers in %u ms at %u.%03u s, %u late",
++	    buffers, now - audio_start, now / 1000, now % 1000, late);
++
++    audio_start = now;
++  }
+ }
+ #endif
+ 
+@@ -2659,6 +2699,27 @@
+   audio.loops_available = TRUE;
+   audio.sound_enabled = TRUE;
+ 
++#if defined(PLATFORM_AMIGA)
++  {
++    // AmigaOS: what SDL_mixer was given, in the program's output
++    int freq = 0, channels = 0;
++    Uint16 format = 0;
++
++    Mix_QuerySpec(&freq, &format, &channels);
++
++    amiga_audio_buffer_ms =
++      (freq > 0 ? 1000 * setup.system.audio_fragment_size / freq : 0);
++
++    SDL_Log("SDL audio \"%s\": %d Hz, %d channels, format 0x%04x, %d samples a buffer (asked %d Hz, %d samples)",
++	    SDL_GetCurrentAudioDriver() ? SDL_GetCurrentAudioDriver() : "?",
++	    freq, channels, (unsigned int)format,
++	    setup.system.audio_fragment_size, audio.sample_rate,
++	    setup.system.audio_fragment_size);
++
++    Mix_SetPostMix(AmigaAudioPostMix, NULL);
++  }
++#endif
++
+   // set number of available mixer channels
+   audio.num_channels = Mix_AllocateChannels(NUM_MIXER_CHANNELS);
+   audio.music_channel = MUSIC_CHANNEL;
+@@ -2669,6 +2730,11 @@
+ 
+ void SDLCloseAudio(void)
+ {
++#if defined(PLATFORM_AMIGA)
++  Mix_SetPostMix(NULL, NULL);
++  amiga_audio_buffer_ms = 0;
++#endif
++
+   Mix_HaltMusic();
+   Mix_HaltChannel(-1);
+ 
+--- a/src/libgame/sound.h
++++ b/src/libgame/sound.h
+@@ -38,6 +38,10 @@
+ 
+ #if defined(PLATFORM_WINDOWS)
+ #define DEFAULT_AUDIO_FRAGMENT_SIZE	AUDIO_FRAGMENT_SIZE_1024
++#elif defined(PLATFORM_AMIGA)
++// AmigaOS: 1024 samples (46 ms at 22,050 Hz); with 512 about one buffer
++// in 140 came more than half a buffer late in play, with 1024 one in 1,500
++#define DEFAULT_AUDIO_FRAGMENT_SIZE	AUDIO_FRAGMENT_SIZE_1024
+ #else
+ #define DEFAULT_AUDIO_FRAGMENT_SIZE	AUDIO_FRAGMENT_SIZE_512
+ #endif

@@ -31,6 +31,7 @@ patches, applied to a copy:
 | `0002-amiga-no-network.patch` | No network code: `src/libgame/net_none.c` takes the place of SDL_net, every call failing as SDL_net does with no network. Network games and the score server are then unavailable, as upstream handles a network it cannot reach; the program needs no TCP/IP stack and opens no `bsdsocket.library` |
 | `0003-amiga-presentation.patch` | Images with alpha on a big-endian machine (upstream keeps an RGBA image's alpha mask, which falls on the back buffer's blue byte on a 68k, and SDL knows no such format: the game stopped at its first image); on AmigaOS full screen is a screen of the game's own in the display mode closest to its 672x560 frame, the frame drawn 1:1 in the middle, and it is the default; with `SetEnv RND_FPS 1` each second's frame rate goes to the program's output |
 | `0004-amiga-input.patch` | On AmigaOS each start logs the joysticks and game controllers SDL finds; with `SetEnv RND_INPUT 1` every key, joystick and controller event the game takes goes to the program's output with its time. Upstream's input itself is unchanged |
+| `0005-amiga-sound.patch` | Upstream's sound code and SDL_mixer unchanged. On AmigaOS 1024 samples a buffer by default (upstream 512; Windows already takes 1024), the audio driver and format logged at start, and with `SetEnv RND_FPS 1` the buffers mixed and those more than half a buffer late every five seconds |
 
 What could stop it: the game draws every frame by the CPU into a 672x560
 32-bit surface and has SDL copy that to the screen, about 1.5 MB a frame.
@@ -122,7 +123,7 @@ amicradle `docs/porting/MEASUREMENT.md`).
 | Launch to the title and menu, a screen of its own, the frame 1:1 | done (menus and play at the game's 50 frames a second) |
 | Keyboard play | done (menus, moving, digging, collecting, snapping; every key in the input log) |
 | Joystick / pad | not tested: SDL finds and opens port 2 as a game controller; no stick in the lab |
-| Sound | not yet |
+| Sound | AHI opened and fed at 22,050 Hz, 1024-sample buffers, 4 late buffers in 6,054; not heard (muted lab); no whole-lab stop in any run |
 | Settings, scores and tapes across a cold restart | not yet |
 | Drawer with GlowIcons, LhA package, installed on a fresh lab from the LhA alone | not yet |
 | Network play, the score server | not built (no network code) |
@@ -257,3 +258,46 @@ reports lowlevel.library's `ReadJoyPort(1)` as `type not available` (and
 port 0, the mouse port, as `unknown`), and no stick or pad event was made.
 A person with a stick or a CD32 pad in port 2 has to try it: in a level,
 the stick should move the player and the red button snap.
+
+### Sound, 3 November 2026
+
+Commit `82dc55a` adds `patches/0005-amiga-sound.patch` (logging only);
+commit `7e9092f` makes 1024 samples a buffer the AmigaOS default.
+Executable (open5, Cradle job `j20261103T100001-75cb52`): SHA-256
+`ea1e66628125c98e7d7067bdbf897474c924253327882f33954b4213a6ef939b`
+(3,037,644 bytes; `receipts/4-sound-open5-stove_build.json`).
+
+In `lab:rnd` (ahi.device 6.1.2, muted), `SetEnv RND_FPS 1`, with
+upstream's sound settings (sound effects, loops and music on, 22,050 Hz):
+
+- Upstream's Version Info page: platform Amiga, render driver `opengpu`,
+  video driver `amigaos3`, audio driver `ahi`; SDL 2.32.10, SDL_image
+  2.8.12, SDL_mixer 2.8.2. (SDL_net 2.4.0 there is the header's version,
+  which `net_none.c` reports.)
+- The build of `82dc55a` with upstream's 512 samples: `SDL audio "ahi":
+  22050 Hz, 2 channels, format 0x9010, 512 samples a buffer` (16-bit
+  big-endian stereo, 23.2 ms buffers). Over about six minutes (the
+  Info screen, then two minutes of play with
+  `HoldKeys 70 CYCLE 4E,4D,4E,4D,4F,4C,4F,4D,4E,4C PERIOD 25`, digging and
+  collecting with their sounds): 15,361 buffers, 43.1 a second as 22,050 /
+  512 gives, none late through loading and the menus; in play **112 came
+  more than half a buffer late** (0.73 per cent of all, up to 9 in five
+  seconds).
+- The same build with `system.audio_fragment_size: 1024` (46.4 ms
+  buffers) and the same play: 6,054 buffers, 21.5 a second, **4 late**
+  (0.07 per cent; three in the first 40 seconds, one in play).
+- So the AmigaOS default is now 1024 (`7e9092f`); a later start with no
+  `setup.conf` logged `1024 samples a buffer (asked 22050 Hz, 1024
+  samples)`. 46 ms is short enough for this game's effects.
+- No whole-lab stop or freeze in any run in this lab, steps 2 to 5,
+  every one with sound on (twelve starts of the game). The classic music
+  modules are not packed (see Data and licences), and SDL2_mixer.module
+  has no module player anyway, so only the effects and upstream's rhythm
+  loop play; in-game music is silent.
+
+Labs are muted: AHI was opened and fed at the full rate, which is what a
+muted lab can show; that it sounds right is still to be heard on a real
+instance.
+
+![Version Info: Amiga, opengpu, amigaos3, ahi](docs/observed/step4-version-info.png)
+![Two minutes of play with sound](docs/observed/step4-play-sound.png)

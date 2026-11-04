@@ -11,3 +11,4 @@ was built; the receipt is committed after it.
 | `1-data.json` | Cradle `stove_build` of `eadcf6e`, target `runtime-data` (job `j20261103T084048-ea0612`) | Cradle (open5) | `c9fdd39aa791f8336ce39937e9ed918cc61edcdde9e291ebbc2275465c8d8e0e` |
 | `2-presentation-open5-stove_build.json` | Cradle `stove_build` of `3783f4d`, target `.` (job `j20261103T092616-2d5f5e`) | Cradle's `os32-gcc16` stove (open5) | `a3e0a1a79514f8f0ba920652d7fbbc2bf62369bf44e8d1177341e4ea8baa67d9` |
 | `3-input-open5-stove_build.json` | Cradle `stove_build` of `03cfbba`, target `.` (job `j20261103T093747-df4d02`) | Cradle's `os32-gcc16` stove (open5) | `e2cb04e99cdf7f69b61b07309c3d75437b45c13913fa593cfeaec8c8396ef48d` |
+| `4-sound-open5-stove_build.json` | Cradle `stove_build` of `7e9092f`, target `.` (job `j20261103T100001-75cb52`) | Cradle's `os32-gcc16` stove (open5) | `c48f898e4eee4a63d9871e4d228a7288f5e0d88637a7f9ad69522b35d31d6234` |
