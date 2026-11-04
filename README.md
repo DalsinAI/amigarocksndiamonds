@@ -124,7 +124,7 @@ amicradle `docs/porting/MEASUREMENT.md`).
 | Keyboard play | done (menus, moving, digging, collecting, snapping; every key in the input log) |
 | Joystick / pad | not tested: SDL finds and opens port 2 as a game controller; no stick in the lab |
 | Sound | AHI opened and fed at 22,050 Hz, 1024-sample buffers, 4 late buffers in 6,054; not heard (muted lab); no whole-lab stop in any run |
-| Settings, scores and tapes across a cold restart | not yet |
+| Players, settings and saved games (tapes) across a cold restart | done (`PROGDIR:userdata`) |
 | Drawer with GlowIcons, LhA package, installed on a fresh lab from the LhA alone | not yet |
 | Network play, the score server | not built (no network code) |
 
@@ -301,3 +301,46 @@ instance.
 
 ![Version Info: Amiga, opengpu, amigaos3, ahi](docs/observed/step4-version-info.png)
 ![Two minutes of play with sound](docs/observed/step4-play-sound.png)
+
+### Saves: players, settings and saved games, 3 November 2026
+
+Rocks'n'Diamonds keeps everything a player makes in its user data
+directory, here `PROGDIR:userdata`: the players (`usersetup.conf`, and a
+drawer under `users/` for each), each player's settings (`setup.conf`),
+progress in each level set (`levelsetup/`), scores, and tapes (recordings
+of games, which upstream's F1, "save game", writes and F2 loads). No change
+was needed for any of it beyond step 1's paths: the step 4 build
+(`7e9092f`, `ea1e6662...939b`) was used.
+
+In `lab:rnd`, the earlier `PROGDIR:userdata` renamed away, so the game
+started with none:
+
+- First start: `PROGDIR:userdata` made, full screen by default (no
+  `setup.conf` yet), the player "anonymous".
+- Name, Players & Teams: a second player, typed `amiga` in upstream's name
+  entry, with the current settings copied to it. The main menu then said
+  NAME: AMIGA.
+- Setup, Sound & Music: "Sound effects (looping)" from on to off.
+- Start Game (the first level of Niko Böhm's tutorial), 25 seconds of
+  HoldKeys play, then F1: "TAPE SAVED" at 0:49 of the level's clock.
+  `users/001/tapes/rnd_tutorial_niko_boehm/001.tape` (238 bytes) and
+  the player's `setup.conf` with `player_name: amiga` and
+  `repeating_sound_loops: off` were written.
+- Escape, Yes; Quit, Yes: a clean exit.
+- **Cold restart:** the lab was stopped and started again. Every file under
+  `PROGDIR:userdata/users/001` was still there with its size and time.
+- The game started as AMIGA, with the saved tape in the tape deck (03 NOV
+  26, 00:49). **F2 loaded it:** the level came back exactly as saved (the
+  same tunnels, the player in the same place, score 80, the emeralds still
+  needed 30, the clock at 0:49), paused, and the cursor keys played on
+  from there. Setup, Sound & Music still had "Sound effects (looping):
+  OFF". Quit was clean.
+
+![Before: the looping sounds turned off](docs/observed/step5-setting-before.png)
+![F1: the tape saved at 0:49](docs/observed/step5-tape-saved.png)
+![After the cold restart: AMIGA, the tape in the deck](docs/observed/step5-after-restart-menu.png)
+![F2: the game as it was saved](docs/observed/step5-after-restart-loaded.png)
+![The setting kept](docs/observed/step5-after-restart-setting.png)
+
+Not covered: a finished level and its high score (HoldKeys does not solve
+levels), a full disk or a write-protected drawer.
