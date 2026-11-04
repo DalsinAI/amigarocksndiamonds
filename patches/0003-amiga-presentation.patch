@@ -1,0 +1,162 @@
+--- a/src/files.c
++++ b/src/files.c
+@@ -12723,6 +12723,12 @@
+   si->touch.overlay_buttons		= TRUE;
+ #endif
+ 
++#if defined(PLATFORM_AMIGA)
++  // AmigaOS: a screen of its own by default (Setup, Graphics, Fullscreen
++  // off, or Alt+Return, gives a window on the Workbench)
++  si->fullscreen			= TRUE;
++#endif
++
+   setHideSetupEntry(&setup.debug.xsn_mode);
+ }
+ 
+--- a/src/libgame/sdl.c
++++ b/src/libgame/sdl.c
+@@ -80,11 +80,60 @@
+     gfx.draw_global_anim_function(draw_target, DRAW_GLOBAL_ANIM_STAGE_3);
+ }
+ 
++#if defined(PLATFORM_AMIGA)
++// AmigaOS, with the variable RND_FPS set (SetEnv RND_FPS 1): each second,
++// the frames shown, and the time each took to put on the screen (the
++// texture update, the copies and the present, without the wait for the
++// game's frame delay), through SDL's log (the program's output)
++static void AmigaLogFrameRate(unsigned int work_ms)
++{
++  static int enabled = -1;
++  static unsigned int start = 0, frames = 0, work = 0, work_max = 0;
++  unsigned int now = SDL_GetTicks();
++
++  if (enabled < 0)
++  {
++    // SDL's getenv (dos.library's GetVar), which sees ENV: as SetEnv sets it
++    enabled = (SDL_getenv("RND_FPS") != NULL);
++
++    SDL_Log("first frame shown %u ms after SDL started%s", now,
++	    enabled ? "; frame log on" : "");
++  }
++
++  if (!enabled)
++    return;
++
++  if (start == 0)
++    start = now;
++
++  frames++;
++  work += work_ms;
++  if (work_ms > work_max)
++    work_max = work_ms;
++
++  if (now - start >= 1000)
++  {
++    SDL_Log("fps %d.%d at %u.%03u s (screen update %u.%u ms a frame, %u ms at most)",
++	    (int)(10000 * frames / (now - start)) / 10,
++	    (int)(10000 * frames / (now - start)) % 10,
++	    now / 1000, now % 1000,
++	    10 * work / frames / 10, 10 * work / frames % 10, work_max);
++
++    start = now;
++    frames = work = work_max = 0;
++  }
++}
++#endif
++
+ static void UpdateScreenExt(SDL_Rect *rect, boolean with_frame_delay)
+ {
+   if (program.headless)
+     return;
+ 
++#if defined(PLATFORM_AMIGA)
++  unsigned int amiga_frame_start = SDL_GetTicks();
++#endif
++
+   static DelayCounter update_screen_delay = { 50 };	// (milliseconds)
+   SDL_Surface *screen = backbuffer->surface;
+ 
+@@ -245,6 +294,10 @@
+   DrawTouchGadgetsOverlay();
+ #endif
+ 
++#if defined(PLATFORM_AMIGA)
++  unsigned int amiga_work_ms = SDL_GetTicks() - amiga_frame_start;
++#endif
++
+   // global synchronization point of the game to align video frame delay
+   if (with_frame_delay)
+     WaitUntilDelayReached(&video.frame_delay);
+@@ -252,8 +305,16 @@
+   video.frame_counter++;
+ 
+   // show render target buffer on screen
++#if defined(PLATFORM_AMIGA)
++  unsigned int amiga_present_start = SDL_GetTicks();
++#endif
++
+   SDL_RenderPresent(sdl_renderer);
+ 
++#if defined(PLATFORM_AMIGA)
++  AmigaLogFrameRate(amiga_work_ms + (SDL_GetTicks() - amiga_present_start));
++#endif
++
+   window_resized = FALSE;
+ }
+ 
+@@ -457,6 +518,17 @@
+   {
+     format = *backbuffer->surface->format;
+     format.Amask = surface->format->Amask;	// keep alpha channel
++
++#if SDL_BYTEORDER == SDL_BIG_ENDIAN
++    /* the image's own alpha mask may share bits with the back buffer's
++       colours: an RGBA image (SDL_PIXELFORMAT_RGBA32) has its alpha in the
++       low byte on a big-endian machine, where the back buffer has blue, and
++       SDL then knows no such format; keep alpha in the bits the colours
++       leave free instead, as it falls on a little-endian machine */
++    if (format.Amask != 0 && format.BitsPerPixel == 32 &&
++	(format.Amask & (format.Rmask | format.Gmask | format.Bmask)) != 0)
++      format.Amask = ~(format.Rmask | format.Gmask | format.Bmask);
++#endif
+   }
+   else
+   {
+@@ -695,7 +767,13 @@
+   SDL_Surface *new_surface = NULL;
+ 
+   int surface_flags_window     = SURFACE_FLAGS;
++#if defined(PLATFORM_AMIGA)
++  // AmigaOS: a screen of the game's own, in the display mode closest to its
++  // frame, not the desktop's mode with the frame scaled to fill it
++  int surface_flags_fullscreen = SURFACE_FLAGS | SDL_WINDOW_FULLSCREEN;
++#else
+   int surface_flags_fullscreen = SURFACE_FLAGS | SDL_WINDOW_FULLSCREEN_DESKTOP;
++#endif
+ 
+ #if 1
+   int renderer_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE;
+@@ -779,6 +857,11 @@
+       // SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+       SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, setup.window_scaling_quality);
+ 
++#if defined(PLATFORM_AMIGA)
++      // AmigaOS: the frame in whole pixels, centred on a larger screen
++      SDL_RenderSetIntegerScale(sdl_renderer, SDL_TRUE);
++#endif
++
+       // required for setting adaptive vsync when using OpenGL renderer
+       SDLSetScreenVsyncMode(setup.vsync_mode);
+ 
+@@ -960,7 +1043,11 @@
+   if (sdl_window == NULL)
+     return;
+ 
++#if defined(PLATFORM_AMIGA)
++  int flags = (fullscreen ? SDL_WINDOW_FULLSCREEN : 0);
++#else
+   int flags = (fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
++#endif
+ 
+   if (SDL_SetWindowFullscreen(sdl_window, flags) == 0)
+     video.fullscreen_enabled = fullscreen_enabled = fullscreen;
