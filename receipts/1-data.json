@@ -1,0 +1,28 @@
+{
+  "upstream_commit": "b42509b0cc55e6eb6b48953be946c09ac24cf6a3",
+  "repository_commit": "eadcf6e4fe35170a3f3a13e615bf2ef971fbc565",
+  "files": 637,
+  "sha256sums_sha256": "89a1c54a1bb476bddaa9167013227330ab22330b8b875bdd98926dbacb7491f8",
+  "archive_sha256": "402ca165b6a26dec3e6c17befea8206b4079175955c0cab81183526e05968358",
+  "archive_bytes": 2304000,
+  "untar_sha256": "2de6090b9ef982dd1137e2e596da348fde51d09bf76b9ef11c604bbac86c7b6d",
+  "dirs": [
+    "graphics/gfx_classic",
+    "sounds/snd_classic",
+    "music/mus_classic",
+    "levels/Tutorials",
+    "docs",
+    "conf"
+  ],
+  "excluded": [
+    "levels/Classic_Games",
+    "music/mus_classic/mod.apoplexy",
+    "music/mus_classic/mod.apoplexy.txt",
+    "music/mus_classic/mod.chiptune",
+    "music/mus_classic/mod.chiptune.txt",
+    "music/mus_classic/mod.cream_of_the_earth",
+    "music/mus_classic/mod.cream_of_the_earth.txt",
+    "graphics/Makefile"
+  ],
+  "rights": "No licence of its own: for lab runs until Dale decides (README, Data and licences)"
+}

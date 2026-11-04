@@ -1,0 +1,153 @@
+--- a/src/libgame/Makefile
++++ b/src/libgame/Makefile
+@@ -28,6 +28,7 @@
+ 	setup.c		\
+ 	misc.c		\
+ 	sdl.c		\
++	net_none.c	\
+ 	zip/ioapi.c	\
+ 	zip/iowin32.c	\
+ 	zip/unzip.c	\
+@@ -48,6 +49,7 @@
+ 	setup.o		\
+ 	misc.o		\
+ 	sdl.o		\
++	net_none.o	\
+ 	zip/ioapi.o	\
+ 	zip/iowin32.o	\
+ 	zip/unzip.o	\
+--- a/src/libgame/net_none.c
++++ b/src/libgame/net_none.c
+@@ -0,0 +1,132 @@
++// ============================================================================
++// Rocks'n'Diamonds for AmigaOS 3.x: SDL_net without a network
++// ----------------------------------------------------------------------------
++// The AmigaOS build has no network code: it needs no TCP/IP stack and opens
++// no bsdsocket.library. These take the place of SDL_net's functions; each
++// fails as SDL_net does when there is no network, so network games and the
++// score server are simply unavailable, as upstream handles any network
++// that cannot be reached. GPL-2.0-or-later, as the game.
++// ============================================================================
++
++#include "platform.h"
++
++#if defined(PLATFORM_AMIGA)
++
++#include <stdarg.h>
++#include <stdio.h>
++
++#include <SDL_net.h>
++
++static char net_error[128] = "no network in this build";
++
++const SDLNet_version *SDLNet_Linked_Version(void)
++{
++  static SDLNet_version linked;
++
++  SDL_NET_VERSION(&linked);
++
++  return &linked;
++}
++
++int SDLNet_Init(void)
++{
++  return -1;
++}
++
++void SDLNet_Quit(void)
++{
++}
++
++int SDLNet_ResolveHost(IPaddress *address, const char *host, Uint16 port)
++{
++  if (address != NULL)
++  {
++    address->host = INADDR_NONE;
++    address->port = 0;
++  }
++
++  return -1;
++}
++
++TCPsocket SDLNet_TCP_Open(IPaddress *ip)
++{
++  return NULL;
++}
++
++TCPsocket SDLNet_TCP_Accept(TCPsocket server)
++{
++  return NULL;
++}
++
++int SDLNet_TCP_Send(TCPsocket sock, const void *data, int len)
++{
++  return 0;
++}
++
++int SDLNet_TCP_Recv(TCPsocket sock, void *data, int maxlen)
++{
++  return -1;
++}
++
++void SDLNet_TCP_Close(TCPsocket sock)
++{
++}
++
++UDPsocket SDLNet_UDP_Open(Uint16 port)
++{
++  return NULL;
++}
++
++int SDLNet_UDP_Send(UDPsocket sock, int channel, UDPpacket *packet)
++{
++  return 0;
++}
++
++int SDLNet_UDP_Recv(UDPsocket sock, UDPpacket *packet)
++{
++  return -1;
++}
++
++void SDLNet_UDP_Close(UDPsocket sock)
++{
++}
++
++SDLNet_SocketSet SDLNet_AllocSocketSet(int maxsockets)
++{
++  return NULL;
++}
++
++int SDLNet_AddSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock)
++{
++  return -1;
++}
++
++int SDLNet_DelSocket(SDLNet_SocketSet set, SDLNet_GenericSocket sock)
++{
++  return -1;
++}
++
++int SDLNet_CheckSockets(SDLNet_SocketSet set, Uint32 timeout)
++{
++  return -1;
++}
++
++void SDLNet_FreeSocketSet(SDLNet_SocketSet set)
++{
++}
++
++void SDLNet_SetError(const char *fmt, ...)
++{
++  va_list ap;
++
++  va_start(ap, fmt);
++  vsnprintf(net_error, sizeof(net_error), fmt, ap);
++  va_end(ap);
++}
++
++const char *SDLNet_GetError(void)
++{
++  return net_error;
++}
++
++#endif // PLATFORM_AMIGA
