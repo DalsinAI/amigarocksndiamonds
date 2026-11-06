@@ -1,0 +1,12 @@
+schema = 1
+repo = "amigarocksndiamonds"
+
+[stove]
+name = "os32-gcc16"
+version = "16.2.0-open6"
+
+[build]
+entry = "build-amiga.sh"
+
+[paths]
+skip = ["*.md", "docs/*", "LICENSE"]

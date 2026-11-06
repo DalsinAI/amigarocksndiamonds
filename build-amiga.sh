@@ -42,7 +42,8 @@ COMPILER=$(python3 - "$STOVE" "$OPEN3" "$OPEN4" "$CC" <<'EOF'
 import json, subprocess, sys
 from pathlib import Path
 stove = Path(sys.argv[1])
-known = {sys.argv[2]: "16.2.0-open3", sys.argv[3]: "16.2.0-open4"}
+known = {sys.argv[2]: "16.2.0-open3", sys.argv[3]: "16.2.0-open4",
+         "65f284476ec20cdf7851475d91d2c18d77fa6f2a0eb0f844b6ca23dbfa57eaa7": "16.2.0-open6"}   # GFOpenAmigaGCC, v16.2.0-open6's archive
 got = release = None
 if (stove / "STOVE.json").is_file():
     info = json.loads((stove / "STOVE.json").read_text())
@@ -58,7 +59,7 @@ elif got is None and release == "GFOpenAmigaGCC 16.2.0-open5":
         sys.exit(f"STOVE.json says {release}, the compiler says {version.splitlines()[:1]}")
     print("16.2.0-open5", "unpublished")
 else:
-    sys.exit(f"{stove} is not an OpenAmigaGCC 16.2.0-open3 or open4 or a GFOpenAmigaGCC 16.2.0-open5 stove (compiler archive {got}, release {release})")
+    sys.exit(f"{stove} is not an OpenAmigaGCC 16.2.0-open3 or open4 or a GFOpenAmigaGCC 16.2.0-open5 or open6 stove (compiler archive {got}, release {release})")
 EOF
 )
 RELEASE=${COMPILER% *}
