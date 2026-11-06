@@ -28,40 +28,17 @@ if [ -z "${STOVE:-}" ]; then
 fi
 OUT=${OUT:-"$HERE/build-amiga"}
 JOBS=${JOBS:-2}
-OPEN3=9fcc136ab59e3bb5b91d2764d0bf290b709d72d7380be4ce0cdf005edf8eff21
-OPEN4=495319a2ffd803278f8827cad70074029c7aa9ecbe05d037e8646ba43ab94ab2
 P="$STOVE/prefix"
 SDK="$P/m68k-amigaos"
 CC="$P/bin/m68k-amigaos-gcc"
 
-# the compiler must be one of them: open3 or open4 by its archive's
-# checksum, from the stove's STOVE.json (Cradle's stoves) or provenance.json
-# (a staged stove); open5 by STOVE.json's release and the compiler's own
-# --version, as Cradle's stove has it (no archive published)
-COMPILER=$(python3 - "$STOVE" "$OPEN3" "$OPEN4" "$CC" <<'EOF'
-import json, subprocess, sys
-from pathlib import Path
-stove = Path(sys.argv[1])
-known = {sys.argv[2]: "16.2.0-open3", sys.argv[3]: "16.2.0-open4",
-         "65f284476ec20cdf7851475d91d2c18d77fa6f2a0eb0f844b6ca23dbfa57eaa7": "16.2.0-open6"}   # GFOpenAmigaGCC, v16.2.0-open6's archive
-got = release = None
-if (stove / "STOVE.json").is_file():
-    info = json.loads((stove / "STOVE.json").read_text())
-    got = (info.get("compilerArchive") or {}).get("sha256")
-    release = info.get("release")
-if got is None and (stove / "provenance.json").is_file():
-    got = json.loads((stove / "provenance.json").read_text()).get("archive_sha256")
-if got in known:
-    print(known[got], got)
-elif got is None and release == "GFOpenAmigaGCC 16.2.0-open5":
-    version = subprocess.run([sys.argv[4], "--version"], capture_output=True, text=True).stdout
-    if "(GFOpenAmigaGCC 16.2.0-open5)" not in version:
-        sys.exit(f"STOVE.json says {release}, the compiler says {version.splitlines()[:1]}")
-    print("16.2.0-open5", "unpublished")
-else:
-    sys.exit(f"{stove} is not an OpenAmigaGCC 16.2.0-open3 or open4 or a GFOpenAmigaGCC 16.2.0-open5 or open6 stove (compiler archive {got}, release {release})")
-EOF
-)
+# the compiler must be a published OpenAmigaGCC/GFOpenAmigaGCC 16.2.0-openN
+# (open3 or later) whose stove records its archive's SHA-256, or open5 (no
+# archive published), and its own --version must say the same release:
+# scripts/verify_gameport_stove.py (the shared gate, DalsinAI/amicradle-stoves)
+# prints "RELEASE ARCHIVE-SHA256" ("unpublished" for open5) and says on
+# stderr why it took the stove
+COMPILER=$(python3 "$HERE/scripts/verify_gameport_stove.py" --stove "$STOVE")
 RELEASE=${COMPILER% *}
 ARCHIVE=${COMPILER#* }
 "$CC" --version | head -n 1
