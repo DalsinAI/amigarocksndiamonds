@@ -1,0 +1,9 @@
+{
+  "makefiles": [],
+  "no_cpu": [
+    "build-amiga.sh"
+  ],
+  "builds": [
+    "build-amiga.sh"
+  ]
+}

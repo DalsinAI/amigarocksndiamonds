@@ -1,0 +1,42 @@
+{
+  "name": "Rocks'n'Diamonds",
+  "version": "4.4.2.4-amiga1-rc1",
+  "drawer": "RocksnDiamonds",
+  "program": "rocksndiamonds",
+  "cpu": "68040",
+  "fpu": true,
+  "space": 30000000,
+  "modules": [
+    "SDL2.module",
+    "SDL2_image.module",
+    "SDL2_mixer.module",
+    "GL.module"
+  ],
+  "keep": [
+    "userdata"
+  ],
+  "parent": "Work:Games",
+  "badge": "../amiga/icons/art/rocksndiamonds.png",
+  "data": [
+    {
+      "what": "the game's graphics, sounds, music and levels, from upstream's own release",
+      "files": [
+        "graphics",
+        "sounds",
+        "music",
+        "levels",
+        "docs",
+        "conf"
+      ],
+      "optional": false,
+      "import": false,
+      "page": "https://www.artsoft.org/rocksndiamonds/",
+      "download": {
+        "url": "https://www.artsoft.org/RELEASES/windows/rocksndiamonds/rocksndiamonds-4.4.2.4-win64.zip",
+        "sha256": "7bae82762038f701a46c523bcc98266f5ec5fc24f73f619e06c79cfaee8065fa",
+        "size": 6003398,
+        "root": "Rocks'n'Diamonds 4.4.2.4"
+      }
+    }
+  ]
+}
