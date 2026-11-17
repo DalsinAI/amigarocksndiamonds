@@ -32,3 +32,6 @@ rocksndiamonds.exe
 
 # ignore local configuration files
 build-scripts/make_dist.conf
+__pycache__/
+build-amiga/
+build-amiga-package/

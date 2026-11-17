@@ -1,5 +1,5 @@
 #!/bin/sh
-# Rocks'n'Diamonds for AmigaOS 3.x / AmiCradle (68040 + FPU, SDL 2,
+# Rocks'n'Diamonds for AmigaOS 3.x / AmiCradle (68040 or 68060, SDL 2,
 # SDL2_image and SDL2_mixer through GFOpenGPU), built with the os32-gcc16
 # stove: GFOpenAmigaGCC 16.2.0-open5 (Cradle's os32-gcc16 stove), which has
 # no published archive, so the receipt records the SHA-256 of the compiler's
@@ -103,8 +103,9 @@ SOURCES=$( (srcs "$WORK/src/Makefile"
            done) | grep -v '^libgame/zip/iowin32\.c$')
 [ "$(printf '%s\n' $SOURCES | wc -l)" -gt 70 ] || { echo "could not read the source lists"; exit 2; }
 
-# -fno-delete-null-pointer-checks: address 0 is memory on an Amiga
-FLAGS="-noixemul -m68040 -m68881 -pthread -fno-delete-null-pointer-checks -O2 -Wall
+# -fno-delete-null-pointer-checks: address 0 is memory on an Amiga. -msoft-float:
+# one binary; the stove's fpuauto (open7 and later) takes the FPU when there is one
+FLAGS="-noixemul -m68040 -msoft-float -pthread -fno-delete-null-pointer-checks -O2 -Wall
  -Wno-unused -Wno-stringop-truncation -Wno-format-truncation -Wno-misleading-indentation
  -ffile-prefix-map=$WORK=. -DTARGET_SDL2 -I$SDK/include/SDL2 -I$ZLIB/include"
 LIBS="-lSDL2_image -lSDL2_mixer -lSDL2 -lGL -lz -lm -pthread"
@@ -114,17 +115,22 @@ LIBS="-lSDL2_image -lSDL2_mixer -lSDL2 -lGL -lz -lm -pthread"
     export SOURCE_DATE_EPOCH="$EPOCH"
     printf '%s\n' $SOURCES | xargs -P "$JOBS" -I{} sh -c '
         o=$(echo "{}" | tr / _ | sed "s/\.c$/.o/")
-        echo "cc {}"
+        echo $0 $1 -c "{}" -o "$o"
         "$0" $1 -c "{}" -o "$o"' "$CC" "$FLAGS"
     OBJS=$(for s in $SOURCES; do printf '%s ' "$(echo "$s" | tr / _ | sed 's/\.c$/.o/')"; done)
     echo "link rocksndiamonds"
     # shellcheck disable=SC2086
-    "$CC" -noixemul -m68040 -m68881 -pthread -o rocksndiamonds $OBJS -L"$ZLIB/lib" -L"$SDK/lib" $LIBS
+    "$CC" -noixemul -m68040 -msoft-float -pthread -o rocksndiamonds $OBJS -L"$ZLIB/lib" -L"$SDK/lib" $LIBS
 ) 2>&1 | tee "$OUT/build.log"
 
 EXE="$WORK/src/rocksndiamonds"
 [ -f "$EXE" ] || { echo "no executable: see build.log"; exit 2; }
 [ "$(od -An -tx1 -N4 "$EXE" | tr -d ' \n')" = "000003f3" ] || { echo "not an Amiga HUNK executable"; exit 2; }
+# one binary for every 68040 and 68060: -m68040 -msoft-float throughout, no FPU
+# instruction in the objects, the stove's fpuauto linked in (package/soft-float.sh)
+sh "$HERE/package/soft-float.sh" "$P" "$EXE" --log "$OUT/build.log" --allow "$HERE/package/fpu-allow.txt" \
+    "$WORK/src" > "$OUT/soft-float.txt" || { cat "$OUT/soft-float.txt"; exit 2; }
+cat "$OUT/soft-float.txt"
 
 # the drawer: the program and the licence (runtime-data/build-amiga.sh packs
 # the game data that goes beside it; the game makes PROGDIR:userdata itself)
